@@ -5,7 +5,7 @@ export default function PlayGamePage() {
                 html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
             `}</style>
             <iframe
-                src="/game/index.html"
+                src="/game-arcade/index.html"
                 style={{
                     position: 'fixed',
                     top: '72px', left: 0, right: 0, bottom: 0,

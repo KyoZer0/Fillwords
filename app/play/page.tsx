@@ -25,8 +25,8 @@ const VARIANTS = [
         name: 'FillWords Extra',
         tagline: 'More words, bigger grids, new mechanics',
         description: 'Harder puzzles with bonus word chains, time challenges, and exclusive category packs.',
-        locked: true,
-        href: null,
+        locked: false,
+        href: '/play/arcade',
         icon: (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />

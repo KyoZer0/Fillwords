@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>FillWords Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="arcade.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Background effects (Light Theme) -->
+    <div class="bg-grid-arcade"></div>
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <!-- ========== MENU SCREEN ========== -->
+    <div id="menu-screen" class="screen active">
+      <div class="menu-center">
+        <div class="arcade-brand">
+          <div class="arcade-brand-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <h1 class="arcade-brand-title">FillWords <span class="neon-text">Arcade</span></h1>
+          <p class="arcade-brand-sub">Power-ups · Timer · Score Attack</p>
+        </div>
+
+        <button class="arcade-play-btn" id="potd-play-btn">
+          <span class="arcade-play-label" id="potd-title">▶ Start Playing</span>
+          <span class="arcade-play-meta" id="potd-meta"></span>
+        </button>
+
+        <div class="menu-stats">
+          <div class="menu-stat"><span class="menu-stat-val" id="stat-levels">0</span> played</div>
+          <div class="menu-stat-dot"></div>
+          <div class="menu-stat"><span class="menu-stat-val" id="stat-highscore">0</span> best</div>
+          <div class="menu-stat-dot"></div>
+          <div class="menu-stat"><span class="menu-stat-val" id="stat-streak">0</span> streak</div>
+        </div>
+
+        <div class="menu-divider">
+          <span class="menu-divider-line"></span>
+          <span class="menu-divider-text">browse categories</span>
+          <span class="menu-divider-line"></span>
+        </div>
+
+        <div id="category-grid" class="menu-cats"></div>
+      </div>
+    </div>
+
+    <!-- ========== LEVEL SELECT ========== -->
+    <div id="level-screen" class="screen">
+      <div class="screen-topbar">
+        <button id="back-to-menu" class="back-btn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Categories
+        </button>
+      </div>
+      <div class="level-screen-header">
+        <h2 id="level-cat-name"></h2>
+        <p class="level-cat-desc">Select a puzzle</p>
+      </div>
+      <div id="level-grid" class="level-grid"></div>
+    </div>
+
+    <!-- ========== GAME SCREEN ========== -->
+    <div id="game-screen" class="screen">
+      <!-- Top toolbar: back, score, timer -->
+      <div class="game-toolbar-arcade">
+        <button id="back-to-levels" class="back-btn-arcade">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+        <div class="score-display">
+          <span class="score-label">SCORE</span>
+          <span class="score-value" id="score-value">0</span>
+        </div>
+        <div class="combo-display" id="combo-display" style="display:none;">
+          <span class="combo-text" id="combo-text">×2</span>
+        </div>
+        <div class="timer-display" id="timer-display">
+          <svg class="timer-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span class="timer-value" id="timer-value">2:00</span>
+        </div>
+      </div>
+
+      <div class="game-layout-arcade">
+        <!-- Progress bar (hidden words) -->
+        <div class="progress-panel">
+          <div id="progress-dots" class="progress-dots"></div>
+          <span class="progress-count" id="progress-count">0 / 0</span>
+        </div>
+
+        <!-- Board -->
+        <div class="board-panel-arcade">
+          <div id="board-container">
+            <svg id="swipe-overlay"></svg>
+            <div id="letter-grid"></div>
+            <!-- Frost Overlay for Freeze Powerup -->
+            <div id="frost-overlay" class="frost-overlay"></div>
+          </div>
+        </div>
+
+        <!-- Power-up bar -->
+        <div class="powerup-bar">
+          <button class="powerup-btn" id="pw-blast" data-power="blast" title="Reveals word letters in a 3×3 area">
+            <span class="pw-icon">
+              <!-- Blast SVG -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="M4.93 4.93l1.41 1.41"></path>
+                <path d="M17.66 17.66l1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="M6.34 17.66l-1.41 1.41"></path>
+                <path d="M19.07 4.93l-1.41 1.41"></path>
+              </svg>
+            </span>
+            <span class="pw-name">Blast</span>
+            <span class="pw-charges" id="pw-blast-charges">×2</span>
+          </button>
+          <button class="powerup-btn" id="pw-xray" data-power="xray" title="Shows guide lines near your tap">
+            <span class="pw-icon">
+              <!-- Eye/X-Ray SVG -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </span>
+            <span class="pw-name">X-Ray</span>
+            <span class="pw-charges" id="pw-xray-charges">×2</span>
+          </button>
+          <button class="powerup-btn" id="pw-pathfinder" data-power="pathfinder"
+            title="Reveals one word with an animated trail">
+            <span class="pw-icon">
+              <!-- Path/Sparkle SVG -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </span>
+            <span class="pw-name">Path</span>
+            <span class="pw-charges" id="pw-pathfinder-charges">×1</span>
+          </button>
+          <button class="powerup-btn" id="pw-freeze" data-power="freeze" title="Pauses the timer for 10 seconds">
+            <span class="pw-icon">
+              <!-- Snowflake/Freeze SVG -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="12" y1="2" x2="12" y2="22"></line>
+                <line x1="17" y1="5" x2="7" y2="19"></line>
+                <line x1="7" y1="5" x2="17" y2="19"></line>
+                <polyline points="15 22 17 19 20 20"></polyline>
+                <polyline points="4 20 7 19 9 22"></polyline>
+                <polyline points="4 4 7 5 9 2"></polyline>
+                <polyline points="15 2 17 5 20 4"></polyline>
+              </svg>
+            </span>
+            <span class="pw-name">Freeze</span>
+            <span class="pw-charges" id="pw-freeze-charges">×2</span>
+          </button>
+          <button class="powerup-btn hint-btn" id="pw-hint" title="Shakes the first letter of an unfound word">
+            <span class="pw-icon">
+              <!-- Lightbulb/Hint SVG -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M9 18h6"></path>
+                <path d="M10 22h4"></path>
+                <path
+                  d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z">
+                </path>
+              </svg>
+            </span>
+            <span class="pw-name">Hint</span>
+            <span class="pw-charges" id="pw-hint-charges">×3</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GAME OVER SCREEN ========== -->
+    <div id="gameover-screen" class="screen">
+      <div class="gameover-content">
+        <div class="gameover-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="gameover-title">Time's Up!</div>
+        <div class="gameover-stats">
+          <span id="go-words-found" class="gameover-stat-value">0</span> words found ·
+          <span id="go-score" class="gameover-stat-value">0</span> pts
+        </div>
+        <div class="gameover-actions">
+          <button id="retry-level" class="btn-arcade btn-primary-arcade">Try Again</button>
+          <button id="go-back-menu" class="btn-arcade btn-outline-arcade">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== WIN SCREEN ========== -->
+    <div id="win-screen" class="screen">
+      <div class="win-content-arcade">
+        <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+        <div class="win-check-arcade">
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="28" fill="#FFD70022" stroke="#FFD700" stroke-width="2.5" />
+            <path d="M18 30L26 38L42 22" stroke="#0e7490" stroke-width="3.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <div class="win-title-arcade">Level Clear!</div>
+        <div class="win-breakdown">
+          <div class="wb-row"><span>Words</span><span id="wb-words">0</span></div>
+          <div class="wb-row"><span>Time Bonus</span><span id="wb-time">0</span></div>
+          <div class="wb-row"><span>No-Hint Bonus</span><span id="wb-nohint">0</span></div>
+          <div class="wb-row wb-total"><span>Total</span><span id="wb-total">0</span></div>
+        </div>
+        <div class="win-actions-arcade">
+          <button id="next-level" class="btn-arcade btn-primary-arcade">Next Level</button>
+          <button id="play-again" class="btn-arcade btn-outline-arcade">Replay</button>
+          <button id="back-to-menu-win" class="btn-arcade btn-outline-arcade">Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script type="module" src="arcade.js"></script>
+</body>
+
+</html>

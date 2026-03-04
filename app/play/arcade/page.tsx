@@ -1,21 +1,21 @@
-export default function PlayGamePage() {
+export default function PlayArcadePage() {
     return (
         <>
             <style>{`
                 html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
             `}</style>
             <iframe
-                src="/game/index.html"
+                src="/game-arcade/index.html"
                 style={{
                     position: 'fixed',
-                    top: '72px', left: 0, right: 0, bottom: 0,
+                    inset: 0,
                     width: '100%',
-                    height: 'calc(100% - 72px)',
+                    height: '100%',
                     border: 'none',
                     display: 'block',
                     overflow: 'hidden',
                 }}
-                title="FillWords Game"
+                title="FillWords Arcade"
                 allow="autoplay"
                 scrolling="no"
             />
