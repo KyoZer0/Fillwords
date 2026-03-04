@@ -29,7 +29,7 @@ export default function Home() {
         }}>
           {[
             { value: '500+', label: 'Curated Words' },
-            { value: '5', label: 'Unique Themes' },
+            { value: '13', label: 'Unique Themes' },
             { value: 'Daily', label: 'Brain Exercise' },
             { value: '100%', label: 'Subscriber Free' },
           ].map((stat) => (
@@ -121,22 +121,22 @@ export default function Home() {
           }}>
             {[
               {
-                slug: 'cognitive-science-word-puzzles',
-                title: 'The Cognitive Science Behind Word Puzzles',
-                excerpt: 'How engaging with vocabulary grids actively stimulates neuroplasticity and delays cognitive decline.',
-                date: 'March 1, 2026'
+                slug: 'neuroscience-of-puzzle-solving',
+                title: 'The Neuroscience of Puzzle Solving: What Happens in Your Brain',
+                excerpt: 'Dopamine, neural plasticity, and the brain regions activated when you solve puzzles — the full breakdown.',
+                date: 'February 24, 2026'
               },
               {
-                slug: 'history-word-search',
-                title: 'From Print to Digital: The History of the Word Search',
-                excerpt: 'Tracing the origins of the word search from Norman E. Gibat\'s 1968 newspaper invention.',
-                date: 'February 26, 2026'
+                slug: 'puzzles-and-focus',
+                title: 'How Puzzles Improve Focus and Attention in the Digital Age',
+                excerpt: 'Combat digital distraction and train sustained attention through puzzle solving, backed by research.',
+                date: 'February 21, 2026'
               },
               {
-                slug: '5-strategies-master-fillwords',
-                title: '5 Strategies to Master Swipe-to-Connect Games',
-                excerpt: 'Expert techniques for identifying prefixes, suffixes, and pattern recognition on the board.',
-                date: 'February 20, 2026'
+                slug: 'pattern-recognition-skills',
+                title: 'Pattern Recognition: The Hidden Skill Behind Every Great Puzzler',
+                excerpt: 'How expert puzzlers develop visual pattern-matching skills and why this transfers to real life.',
+                date: 'February 18, 2026'
               }
             ].map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>

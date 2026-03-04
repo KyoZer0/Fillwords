@@ -106,13 +106,20 @@ class ConfettiSystem {
 }
 
 // ==========================================
-// BOARD GENERATOR — Robust with diagonal bias
-// Retries entire board if any word can't be placed
+// BOARD GENERATOR — Smart dynamic algorithm
+// Auto-sizes grid, prevents path conflicts,
+// scoring-based placement with diagonal bias
 // ==========================================
 function generateBoard(cols, rows, words) {
-  // 8 directions: 4 diagonals + 4 cardinal
-  const DIAGS = [[1,1],[-1,1],[1,-1],[-1,-1]];
-  const CARDS = [[0,1],[1,0],[0,-1],[-1,0]];
+  const ALL_DIRS = [
+    [1,1],[-1,1],[1,-1],[-1,-1],  // diagonals
+    [0,1],[1,0],[0,-1],[-1,0]     // cardinal
+  ];
+
+  // Auto-expand grid so every word can fit in at least one direction
+  const maxWordLen = Math.max(...words.map(w => w.length));
+  const effectiveCols = Math.max(cols, maxWordLen);
+  const effectiveRows = Math.max(rows, maxWordLen);
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -122,104 +129,165 @@ function generateBoard(cols, rows, words) {
     return arr;
   }
 
-  // Build a direction list with strong diagonal preference:
-  // 70% chance diagonals come first
-  function getDirs() {
-    const d = shuffle([...DIAGS]);
-    const c = shuffle([...CARDS]);
-    if (Math.random() < 0.7) return [...d, ...c];
-    return shuffle([...d, ...c]);
-  }
+  function cellKey(r, c) { return r * 1000 + c; }
 
   function tryGenerate() {
-    const grid = Array(rows).fill(null).map(() => Array(cols).fill(''));
+    const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const placedWords = [];
+    const placedPaths = []; // array of Set<cellKey>
 
     for (const word of sortedWords) {
       const w = word.toUpperCase();
-      const placed = tryPlaceWord(grid, w, cols, rows);
-      if (!placed) return null; // total failure — retry entire board
-      placedWords.push({ word: w, positions: placed });
+      const placement = findBestPlacement(grid, w, placedPaths);
+      if (!placement) return null; // retry entire board
+
+      // Apply placement to grid
+      const pathSet = new Set();
+      for (let i = 0; i < w.length; i++) {
+        const pos = placement.positions[i];
+        grid[pos.r][pos.c] = w[i];
+        pathSet.add(cellKey(pos.r, pos.c));
+      }
+      placedWords.push({ word: w, positions: placement.positions });
+      placedPaths.push(pathSet);
     }
 
     return { grid, placedWords };
   }
 
-  function tryPlaceWord(grid, word, cols, rows) {
-    // Build all possible start positions, shuffled for variety
+  function findBestPlacement(grid, word, placedPaths) {
+    const candidates = [];
+
+    // Shuffled start positions for randomness
     const starts = [];
-    for (let r = 0; r < rows; r++)
-      for (let c = 0; c < cols; c++)
+    for (let r = 0; r < effectiveRows; r++)
+      for (let c = 0; c < effectiveCols; c++)
         starts.push([r, c]);
     shuffle(starts);
 
-    const directions = getDirs();
+    const dirs = shuffle([...ALL_DIRS]);
 
     for (const [r, c] of starts) {
-      for (const [dr, dc] of directions) {
+      for (const [dr, dc] of dirs) {
         const endR = r + dr * (word.length - 1);
         const endC = c + dc * (word.length - 1);
-        // Bounds check
-        if (endR < 0 || endR >= rows || endC < 0 || endC >= cols) continue;
+        if (endR < 0 || endR >= effectiveRows || endC < 0 || endC >= effectiveCols) continue;
 
-        // Check all cells: must be empty or already have the same letter
+        // Check cell compatibility
         let valid = true;
+        const positions = [];
+        const newPathSet = new Set();
+        let overlapCount = 0;
+
         for (let i = 0; i < word.length; i++) {
-          const cell = grid[r + dr * i][c + dc * i];
+          const cr = r + dr * i;
+          const cc = c + dc * i;
+          const cell = grid[cr][cc];
           if (cell !== '' && cell !== word[i]) { valid = false; break; }
+          if (cell !== '') overlapCount++;
+          positions.push({ r: cr, c: cc });
+          newPathSet.add(cellKey(cr, cc));
         }
         if (!valid) continue;
 
-        // Place the word
-        const positions = [];
-        for (let i = 0; i < word.length; i++) {
-          grid[r + dr * i][c + dc * i] = word[i];
-          positions.push({ r: r + dr * i, c: c + dc * i });
+        // Prevent path containment: no word's cells should be a
+        // subset of another's (prevents BEE/BEETLE problem)
+        let pathConflict = false;
+        for (const existingPath of placedPaths) {
+          // Check if new path is subset of existing
+          let newInExisting = true;
+          for (const k of newPathSet) {
+            if (!existingPath.has(k)) { newInExisting = false; break; }
+          }
+          // Check if existing is subset of new
+          let existingInNew = true;
+          for (const k of existingPath) {
+            if (!newPathSet.has(k)) { existingInNew = false; break; }
+          }
+          if (newInExisting || existingInNew) { pathConflict = true; break; }
+
+          // Limit shared cells to 1 to prevent partial overlap issues
+          let shared = 0;
+          for (const k of newPathSet) {
+            if (existingPath.has(k)) {
+              shared++;
+              if (shared > 1) break;
+            }
+          }
+          if (shared > 1) { pathConflict = true; break; }
         }
-        return positions;
+        if (pathConflict) continue;
+
+        // Score: prefer diagonals, penalize overlap, add randomness
+        const isDiag = (dr !== 0 && dc !== 0) ? 1 : 0;
+        const score = isDiag * 10 - overlapCount * 5 + Math.random() * 8;
+        candidates.push({ positions, score });
+
+        // Limit candidates to keep performance reasonable
+        if (candidates.length >= 40) break;
       }
+      if (candidates.length >= 40) break;
     }
-    return null;
+
+    if (candidates.length === 0) return null;
+
+    // Pick from top candidates with some randomness
+    candidates.sort((a, b) => b.score - a.score);
+    const topN = Math.min(candidates.length, 5);
+    return candidates[Math.floor(Math.random() * topN)];
   }
 
-  // Retry up to 50 times to get a valid board
+  // Retry up to 200 times to get a valid board
   let result = null;
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 200; attempt++) {
     result = tryGenerate();
     if (result) break;
   }
 
-  // Absolute fallback (should never happen with reasonable grid sizes)
+  // Absolute fallback — place words horizontally, wrapping rows
   if (!result) {
-    result = { grid: Array(rows).fill(null).map(() => Array(cols).fill('')), placedWords: [] };
+    const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
+    const placedWords = [];
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
-    // Force horizontal placements as last resort
-    let r = 0, c = 0;
     for (const word of sortedWords) {
       const w = word.toUpperCase();
-      const positions = [];
-      for (let i = 0; i < w.length; i++) {
-        if (c >= cols) { c = 0; r++; }
-        if (r >= rows) break;
-        result.grid[r][c] = w[i];
-        positions.push({ r, c });
-        c++;
+      let placed = false;
+      for (let r = 0; r < effectiveRows && !placed; r++) {
+        for (let c = 0; c <= effectiveCols - w.length && !placed; c++) {
+          let canPlace = true;
+          for (let i = 0; i < w.length; i++) {
+            if (grid[r][c + i] !== '' && grid[r][c + i] !== w[i]) { canPlace = false; break; }
+          }
+          if (canPlace) {
+            const positions = [];
+            for (let i = 0; i < w.length; i++) {
+              grid[r][c + i] = w[i];
+              positions.push({ r, c: c + i });
+            }
+            placedWords.push({ word: w, positions });
+            placed = true;
+          }
+        }
       }
-      result.placedWords.push({ word: w, positions });
+      if (!placed) placedWords.push({ word: w.toUpperCase(), positions: [] });
     }
+    result = { grid, placedWords };
   }
 
-  // Fill blanks with rare letters
-  const RARE = "JQXZKVWYBFHM";
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
+  // Fill blanks with random letters (full alphabet for variety)
+  const FILL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let r = 0; r < effectiveRows; r++) {
+    for (let c = 0; c < effectiveCols; c++) {
       if (result.grid[r][c] === '') {
-        result.grid[r][c] = RARE[Math.floor(Math.random() * RARE.length)];
+        result.grid[r][c] = FILL[Math.floor(Math.random() * FILL.length)];
       }
     }
   }
 
+  // Return actual dimensions used (may differ from requested)
+  result.cols = effectiveCols;
+  result.rows = effectiveRows;
   return result;
 }
 
@@ -239,7 +307,8 @@ class GameEngine {
         isDragging: false,
         startTile: null,
         currentPath: [], // Array of {r,c}
-        svgLines: [], // permanently drawn lines for found words
+        pathHasCrossing: false, // true when swiping over already-selected tile
+        svgLines: [], // permanently drawn lines for found words (full path arrays)
         
         // Progress & Tutorial
         unlockedLevels: this.loadProgress(),
@@ -275,13 +344,17 @@ class GameEngine {
   }
 
   loadProgress() {
+    let saved = {};
     try {
-      const saved = localStorage.getItem('fillwords_progress');
-      if (saved) return JSON.parse(saved);
+      const raw = localStorage.getItem('fillwords_progress');
+      if (raw) saved = JSON.parse(raw);
     } catch(e) {}
-    const progress = {};
+    // Merge: ensure every category has at least its first level unlocked
+    const progress = { ...saved };
     CATEGORIES.forEach(cat => {
-      progress[cat.slug] = [cat.levels[0].id];
+      if (!progress[cat.slug] || !Array.isArray(progress[cat.slug]) || progress[cat.slug].length === 0) {
+        progress[cat.slug] = [cat.levels[0].id];
+      }
     });
     return progress;
   }
@@ -502,14 +575,18 @@ class GameEngine {
     this.state.svgLines = [];
     this.state.board = generateBoard(level.cols, level.rows, level.words);
     
+    // Use actual board dimensions (may be auto-expanded for long words)
+    const actualCols = this.state.board.cols || level.cols;
+    const actualRows = this.state.board.rows || level.rows;
+    
     document.getElementById('game-level-title').textContent = level.title;
     
     // Setup Grid UI
-    this.gridEl.style.gridTemplateColumns = `repeat(${level.cols}, 1fr)`;
+    this.gridEl.style.gridTemplateColumns = `repeat(${actualCols}, 1fr)`;
     this.gridEl.innerHTML = '';
     
-    for (let r=0; r<level.rows; r++) {
-        for (let c=0; c<level.cols; c++) {
+    for (let r=0; r<actualRows; r++) {
+        for (let c=0; c<actualCols; c++) {
             const tile = document.createElement('div');
             tile.className = 'letter-tile';
             tile.dataset.r = r;
@@ -635,9 +712,6 @@ class GameEngine {
   onPointerDown(e) {
     const tile = this.getTileFromEvent(e);
     if (!tile) return;
-    
-    // Prevent dragging over already found tiles
-    if (tile.el.classList.contains('found')) return;
 
     this.resetIdleTimer();
     this.hideTutorial();
@@ -657,44 +731,53 @@ class GameEngine {
     const tile = this.getTileFromEvent(e);
     if (!tile) return;
     
-    // Check if tile is in straight line from start
-    const sr = this.state.startTile.r;
-    const sc = this.state.startTile.c;
-    const cr = tile.r;
-    const cc = tile.c;
+    const path = this.state.currentPath;
+    const last = path[path.length - 1];
     
-    const dr = cr - sr;
-    const dc = cc - sc;
+    // Must be adjacent (8-directional) to the last tile in path
+    const dr = Math.abs(tile.r - last.r);
+    const dc = Math.abs(tile.c - last.c);
+    if (dr > 1 || dc > 1 || (dr === 0 && dc === 0)) return;
     
-    // Valid directions: horiz, vert, diagonal
-    if (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) {
-        const len = Math.max(Math.abs(dr), Math.abs(dc));
-        const stepR = len === 0 ? 0 : dr / len;
-        const stepC = len === 0 ? 0 : dc / len;
-        
-        const newPath = [];
-        let valid = true;
-        for (let i = 0; i <= len; i++) {
-            const tr = sr + stepR * i;
-            const tc = sc + stepC * i;
-            // Prevent dragging path over found tiles
-            const el = this.getTileElement(tr, tc);
-            if (el && el.classList.contains('found')) {
-                valid = false;
-                break;
-            }
-            newPath.push({ r: tr, c: tc });
-        }
-        
-        // Only update if path changed and is valid
-        if (valid && (newPath.length !== this.state.currentPath.length || 
-            newPath[newPath.length-1].r !== this.state.currentPath[this.state.currentPath.length-1].r)) {
-            this.state.currentPath = newPath;
-            this.sound.select();
-            this.highlightPath();
-        }
+    // Backtracking: if tile is the second-to-last in path, pop last tile
+    if (path.length >= 2) {
+      const prev = path[path.length - 2];
+      if (prev.r === tile.r && prev.c === tile.c) {
+        path.pop();
+        // Recalculate crossing state
+        this.state.pathHasCrossing = this._pathHasDuplicates(path);
+        this.sound.select();
+        this.highlightPath();
+        this.resetIdleTimer();
+        return;
+      }
     }
+    
+    // Check if tile is already in path (crossing)
+    const alreadyInPath = path.some(p => p.r === tile.r && p.c === tile.c);
+    if (alreadyInPath) {
+      // Mark crossing but don't add the tile again
+      this.state.pathHasCrossing = true;
+      this.highlightPath();
+      this.resetIdleTimer();
+      return;
+    }
+    
+    // Add tile to path
+    path.push({ r: tile.r, c: tile.c });
+    this.sound.select();
+    this.highlightPath();
     this.resetIdleTimer();
+  }
+
+  _pathHasDuplicates(path) {
+    const seen = new Set();
+    for (const p of path) {
+      const key = p.r * 1000 + p.c;
+      if (seen.has(key)) return true;
+      seen.add(key);
+    }
+    return false;
   }
 
   onPointerUp(e) {
@@ -718,10 +801,8 @@ class GameEngine {
         // Mark UI list
         document.getElementById(`word-${text}`).classList.add('found');
         
-        // Save line in SVG
-        const start = this.state.currentPath[0];
-        const end = this.state.currentPath[this.state.currentPath.length-1];
-        this.state.svgLines.push({ start, end });
+        // Save full path in SVG (polyline for non-linear paths)
+        this.state.svgLines.push({ path: [...this.state.currentPath] });
         
         // Trigger tile animations
         this.state.currentPath.forEach(p => {
@@ -737,17 +818,25 @@ class GameEngine {
     
     // Reset selection
     this.state.currentPath = [];
+    this.state.pathHasCrossing = false;
     this.highlightPath(); // clears selection
   }
 
   highlightPath() {
-    // Reset all selection
-    document.querySelectorAll('.letter-tile').forEach(el => el.classList.remove('selected'));
+    // Reset all selection and crossing
+    document.querySelectorAll('.letter-tile').forEach(el => {
+      el.classList.remove('selected', 'crossing');
+    });
+    
+    const hasCrossing = this.state.pathHasCrossing;
     
     // Highlight current
     this.state.currentPath.forEach(p => {
         const el = this.getTileElement(p.r, p.c);
-        if (el) el.classList.add('selected');
+        if (el) {
+          el.classList.add('selected');
+          if (hasCrossing) el.classList.add('crossing');
+        }
     });
     
     this.updateSVG();
@@ -760,23 +849,26 @@ class GameEngine {
   updateSVG() {
     let html = '';
     
-    // Render permanently found lines
+    // Render permanently found lines as polylines
     this.state.svgLines.forEach(line => {
-      const p1 = this.getTileCenter(line.start.r, line.start.c);
-      const p2 = this.getTileCenter(line.end.r, line.end.c);
-      if(p1 && p2) {
-          html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="found-line"></line>`;
+      const points = line.path.map(p => {
+        const c = this.getTileCenter(p.r, p.c);
+        return c ? `${c.x},${c.y}` : null;
+      }).filter(Boolean);
+      if (points.length >= 2) {
+        html += `<polyline points="${points.join(' ')}" class="found-line"></polyline>`;
       }
     });
     
-    // Render current drag line
+    // Render current drag line as polyline
     if (this.state.currentPath.length > 0) {
-      const start = this.state.currentPath[0];
-      const end = this.state.currentPath[this.state.currentPath.length-1];
-      const p1 = this.getTileCenter(start.r, start.c);
-      const p2 = this.getTileCenter(end.r, end.c);
-      if(p1 && p2) {
-          html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="swipe-line"></line>`;
+      const points = this.state.currentPath.map(p => {
+        const c = this.getTileCenter(p.r, p.c);
+        return c ? `${c.x},${c.y}` : null;
+      }).filter(Boolean);
+      if (points.length >= 2) {
+        const crossClass = this.state.pathHasCrossing ? ' crossing' : '';
+        html += `<polyline points="${points.join(' ')}" class="swipe-line${crossClass}"></polyline>`;
       }
     }
     
