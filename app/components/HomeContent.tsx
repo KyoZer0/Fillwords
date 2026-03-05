@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
@@ -268,37 +268,84 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
             }} />
 
 
-            <div className="card-icon" style={{
-                width: '56px', height: '56px', borderRadius: '16px',
-                background: `linear-gradient(135deg, rgba(173, 40, 211, 0.1), rgba(173, 40, 211, 0.2))`,
-                color: '#ad28d3',
-                border: `1px solid rgba(173, 40, 211, 0.3)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 8px 16px rgba(173, 40, 211, 0.15), inset 0 2px 6px rgba(255,255,255,0.8)`,
-                transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                transformStyle: 'preserve-3d'
-            }}>
-                {icon}
+            {/* Orbiting Elements Area */}
+            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', marginTop: '1rem', marginBottom: '2.5rem', transformStyle: 'preserve-3d' }}>
+
+                {/* 3D Orbit Ring */}
+                <div className="arcade-orbit" style={{
+                    position: 'absolute', top: '50%', left: '50%',
+                    width: '120px', height: '120px',
+                    marginLeft: '-60px', marginTop: '-60px',
+                    border: '2px solid rgba(173, 40, 211, 0.4)',
+                    borderRadius: '50%',
+                    transformStyle: 'preserve-3d',
+                    transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    opacity: 0.5,
+                    pointerEvents: 'none'
+                }}>
+                    <div style={{
+                        position: 'absolute', top: '-6px', left: '50%', marginLeft: '-6px',
+                        width: '12px', height: '12px', background: '#FFD700', borderRadius: '50%',
+                        boxShadow: '0 0 10px #FFD700, 0 0 20px #FFD700'
+                    }} />
+                    <div style={{
+                        position: 'absolute', bottom: '-4px', right: '20px',
+                        width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%',
+                        boxShadow: '0 0 8px #ef4444'
+                    }} />
+                </div>
+
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    @keyframes orbit-spin {
+                        from { transform: rotateX(70deg) rotateZ(0deg); }
+                        to { transform: rotateX(70deg) rotateZ(360deg); }
+                    }
+                    .arcade-card:hover .arcade-orbit {
+                        animation: orbit-spin 4s linear infinite;
+                        opacity: 1;
+                        border-color: rgba(173, 40, 211, 0.8);
+                        box-shadow: inset 0 0 20px rgba(173, 40, 211, 0.2);
+                    }
+                    .arcade-card:not(:hover) .arcade-orbit {
+                        transform: rotateX(70deg) rotateZ(45deg); /* static angled resting state */
+                    }
+                `}} />
+
+                <div className="card-icon" style={{
+                    width: '48px', height: '48px', borderRadius: '14px',
+                    background: `linear-gradient(135deg, rgba(173, 40, 211, 0.1), rgba(173, 40, 211, 0.2))`,
+                    color: '#ad28d3',
+                    border: `1px solid rgba(173, 40, 211, 0.3)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 8px 16px rgba(173, 40, 211, 0.15), inset 0 2px 6px rgba(255,255,255,0.8)`,
+                    transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transformStyle: 'preserve-3d',
+                    zIndex: 2,
+                    position: 'relative'
+                }}>
+                    {React.cloneElement(icon as React.ReactElement<any>, { width: 22, height: 22 } as any)}
+                </div>
             </div>
 
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', height: '100%', transformStyle: 'preserve-3d' }}>
-                <h3 style={{ fontFamily: 'var(--font-arcade), var(--font-display)', fontSize: '1.9rem', fontWeight: 400, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '0.02em' }}>
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', height: '100%', transformStyle: 'preserve-3d' }}>
+                <h3 style={{ fontFamily: 'var(--font-arcade), var(--font-display)', fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                     {title}
                 </h3>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ad28d3', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ad28d3', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {tagline}
                 </div>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0, flexGrow: 1 }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0, flexGrow: 1, maxWidth: '90%' }}>
                     {desc}
                 </p>
 
-                <div style={{ marginTop: '2rem', display: 'flex' }}>
+                <div style={{ marginTop: '1.75rem', display: 'flex' }}>
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                         background: 'linear-gradient(135deg, #FFD700, #ffb300)', // Yellow button
-                        color: '#000', padding: '0.6rem 1.6rem', borderRadius: '99px',
+                        color: '#000', padding: '0.5rem 1.4rem', borderRadius: '99px',
                         border: `none`,
-                        fontSize: '0.9rem', fontWeight: 400, fontFamily: 'var(--font-arcade), var(--font-sans)',
+                        fontSize: '0.85rem', fontWeight: 800, fontFamily: 'var(--font-sans)',
                         boxShadow: `0 6px 16px rgba(255, 215, 0, 0.4), inset 0 -3px 0 rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.5)`,
                         transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                         transform: 'translateZ(20px)'
@@ -313,7 +360,7 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
                         }}
                     >
                         Play Now
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12h14" /><polyline points="12 5 19 12 12 19" />
                         </svg>
                     </div>
@@ -461,7 +508,7 @@ export default function HomeContent() {
                             </p>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', justifyItems: 'stretch' }}>
+                        <div className="grid-3" style={{ width: '100%', alignItems: 'stretch' }}>
                             <VariantCard
                                 title="FillWords"
                                 tagline="The simple and fun version"
@@ -520,7 +567,7 @@ export default function HomeContent() {
             <section className="section features-section" style={{ position: 'relative', zIndex: 1, padding: '4rem 0' }}>
                 <div className="container">
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)', gap: '4rem', alignItems: 'start' }}>
+                    <div className="grid-2-responsive">
 
                         {/* Features Grid - Denser */}
                         <div>
@@ -657,8 +704,8 @@ export default function HomeContent() {
             {/* ── Latest on the Blog ── */}
             <section className="section blog-section" style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)', position: 'relative', zIndex: 1, padding: '4rem 0' }}>
                 <div className="container">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
-                        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', position: 'relative' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', marginBottom: '2.5rem' }}>
+                        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 800, color: 'var(--text-primary)', position: 'relative' }}>
                             From the Editor's Desk
                             <div className="swipe-line" style={{
                                 position: 'absolute', bottom: '8px', left: '-2%', width: '104%', height: '10px', background: 'rgba(14, 116, 144, 0.2)', borderRadius: '4px', zIndex: -1
@@ -780,14 +827,14 @@ export default function HomeContent() {
             }}>
                 <div className="container" style={{ position: 'relative' }}>
                     <div style={{
-                        position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)',
+                        position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
                         background: 'var(--accent)', color: '#000', padding: '0.5rem 1.5rem', borderRadius: '99px',
                         fontFamily: 'var(--font-display)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', whiteSpace: 'nowrap', fontSize: 'clamp(0.7rem, 2.5vw, 1rem)'
                     }}>
                         Ready to Play?
                     </div>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '3.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)', fontWeight: 800 }}>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 8vw, 3.5rem)', marginBottom: '1.5rem', marginTop: '1rem', color: 'var(--text-primary)', fontWeight: 800 }}>
                         Your daily puzzle awaits
                     </h2>
                     <p style={{

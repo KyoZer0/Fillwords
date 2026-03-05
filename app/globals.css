@@ -123,6 +123,32 @@ h3 { font-size: 1.05rem; font-weight: 600; }
   gap: 1.25rem;
 }
 
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-2-responsive {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 4rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grid-2-responsive {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
