@@ -14,17 +14,9 @@ const sections = [
         links: [
             { href: '/', label: 'Home' },
             { href: '/#game', label: 'Play FillWords' },
-            { href: '/categories', label: 'All Categories' },
             { href: '/how-to-play', label: 'How to Play' },
             { href: '/faq', label: 'FAQ' },
         ],
-    },
-    {
-        title: 'Game Categories',
-        links: categories.map(cat => ({
-            href: `/categories/${cat.slug}`,
-            label: `${cat.icon} ${cat.name}`,
-        })),
     },
     {
         title: 'Blog',

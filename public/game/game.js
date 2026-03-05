@@ -1,4 +1,5 @@
 import { CATEGORIES } from './levels.js';
+import { WebHaptics, defaultPatterns } from 'https://esm.sh/web-haptics';
 
 // ==========================================
 // SOUND ENGINE
@@ -7,6 +8,7 @@ class SoundEngine {
   constructor() {
     this.ctx = null;
     this.enabled = true;
+    this.haptics = new WebHaptics();
   }
   init() {
     if (this.ctx) return;
@@ -14,6 +16,7 @@ class SoundEngine {
     if (AudioContext) {
       this.ctx = new AudioContext();
     }
+    this.haptics.trigger(defaultPatterns.light);
   }
   _note(freq, type, duration, volume, delay = 0) {
     if (!this.enabled || !this.ctx) return;
@@ -28,18 +31,29 @@ class SoundEngine {
     osc.start(this.ctx.currentTime + delay);
     osc.stop(this.ctx.currentTime + delay + duration);
   }
-  click() { this._note(600, 'sine', 0.1, 0.05); }
-  select() { this._note(400, 'sine', 0.1, 0.02); }
+  click() { 
+    this._note(600, 'sine', 0.1, 0.05); 
+    this.haptics.trigger(defaultPatterns.light);
+  }
+  select() { 
+    this._note(400, 'sine', 0.1, 0.02); 
+    this.haptics.trigger(defaultPatterns.selection);
+  }
   found() { 
     this._note(523.25, 'sine', 0.15, 0.1, 0); // C5
     this._note(659.25, 'sine', 0.15, 0.1, 0.1); // E5
     this._note(783.99, 'sine', 0.3, 0.1, 0.2); // G5
+    this.haptics.trigger(defaultPatterns.success);
   }
-  error() { this._note(150, 'sawtooth', 0.2, 0.05); }
+  error() { 
+    this._note(150, 'sawtooth', 0.2, 0.05); 
+    this.haptics.trigger(defaultPatterns.error);
+  }
   win() {
     [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
       this._note(freq, 'sine', 0.4, 0.1, i * 0.15);
     });
+    this.haptics.trigger(defaultPatterns.success);
   }
   setMute(isMuted) {
     this.enabled = !isMuted;

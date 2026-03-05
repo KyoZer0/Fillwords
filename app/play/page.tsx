@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 
 const VARIANTS = [
     {
-        id: 'classic',
+        id: 'Starter',
         name: 'FillWords',
-        tagline: 'The original word search puzzle',
+        tagline: 'The simple and fun version',
         description: 'Swipe through a letter grid to find all hidden words. 3 categories, 15 levels, unlimited fun.',
         locked: false,
         href: '/play/game',
@@ -23,8 +23,8 @@ const VARIANTS = [
     {
         id: 'extra',
         name: 'FillWords Extra',
-        tagline: 'More words, bigger grids, new mechanics',
-        description: 'Harder puzzles with bonus word chains, time challenges, and exclusive category packs.',
+        tagline: 'Want more challenge, more fun? Try FillWords Extra!',
+        description: 'Harder puzzles with bonus word chains, time challenges, arcade vibes, and more.',
         locked: false,
         href: '/play/arcade',
         icon: (
@@ -34,10 +34,10 @@ const VARIANTS = [
         ),
     },
     {
-        id: 'master',
-        name: 'FillWords Master',
-        tagline: 'The ultimate word puzzle challenge',
-        description: 'Compete on leaderboards, earn badges, and tackle daily tournament puzzles against top players.',
+        id: 'Classic',
+        name: 'FillWords Classic',
+        tagline: 'The original word puzzle',
+        description: 'Experience the original FillWords puzzle, the one that started it all.',
         locked: true,
         href: null,
         icon: (

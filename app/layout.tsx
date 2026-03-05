@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from 'next/script';
-import { Lora, Playfair_Display } from "next/font/google";
+import { Lora, Playfair_Display, Righteous } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -14,6 +14,13 @@ const lora = Lora({
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-display",
+  display: "swap",
+});
+
+const righteous = Righteous({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-arcade",
   display: "swap",
 });
 
@@ -108,14 +115,14 @@ export default function RootLayout({
                 "Free online word puzzle game. Swipe through a grid of letters to find hidden words across 5 categories.",
               potentialAction: {
                 "@type": "SearchAction",
-                target: "https://fillwords.com/categories?q={search_term_string}",
+                target: "https://fillwords.com/?q={search_term_string}",
                 "query-input": "required name=search_term_string",
               },
             }),
           }}
         />
       </head>
-      <body className={`${lora.variable} ${playfair.variable}`}>
+      <body className={`${lora.variable} ${playfair.variable} ${righteous.variable}`}>
         <Header />
         <main>{children}</main>
         <Footer />

@@ -71,8 +71,8 @@ export default function HeroSection() {
                     className="hero-game-wrapper"
                     ref={gameRef}
                     style={{
+                        width: '100%',
                         maxWidth: '960px',
-                        aspectRatio: '16/9',
                         background: '#f0f7fa',
                         border: '2px solid rgba(14, 116, 144, 0.25)',
                         borderRadius: '16px',

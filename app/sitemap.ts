@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Static pages
   const staticPages = [
     { path: '', priority: 1.0, changeFrequency: 'weekly' as const },
-    { path: '/categories', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/how-to-play', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/faq', priority: 0.6, changeFrequency: 'monthly' as const },
     { path: '/blog', priority: 0.7, changeFrequency: 'weekly' as const },
@@ -52,14 +51,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/blog/puzzles-for-seniors', priority: 0.6, changeFrequency: 'monthly' as const },
   ];
 
-  // Category pages
-  const categoryPages = categories.map(cat => ({
-    path: `/categories/${cat.slug}`,
-    priority: 0.7,
-    changeFrequency: 'weekly' as const,
-  }));
-
-  const allPages = [...staticPages, ...blogPosts, ...categoryPages];
+  const allPages = [...staticPages, ...blogPosts];
 
   return allPages.map(page => ({
     url: `${baseUrl}${page.path}`,
