@@ -126,9 +126,16 @@ class ConfettiSystem {
 // ==========================================
 function generateBoard(cols, rows, words) {
   const ALL_DIRS = [
-    [1,1],[-1,1],[1,-1],[-1,-1],  // diagonals
-    [0,1],[1,0],[0,-1],[-1,0]     // cardinal
+    { dr: 0, dc: 1, key: 'right', axis: 'horizontal' },
+    { dr: 0, dc: -1, key: 'left', axis: 'horizontal' },
+    { dr: 1, dc: 0, key: 'down', axis: 'vertical' },
+    { dr: -1, dc: 0, key: 'up', axis: 'vertical' },
+    { dr: 1, dc: 1, key: 'down-right', axis: 'diagonal' },
+    { dr: 1, dc: -1, key: 'down-left', axis: 'diagonal' },
+    { dr: -1, dc: 1, key: 'up-right', axis: 'diagonal' },
+    { dr: -1, dc: -1, key: 'up-left', axis: 'diagonal' }
   ];
+  const AXES = ['horizontal', 'vertical', 'diagonal'];
 
   // Auto-expand grid so every word can fit in at least one direction
   const maxWordLen = Math.max(...words.map(w => w.length));
@@ -145,15 +152,137 @@ function generateBoard(cols, rows, words) {
 
   function cellKey(r, c) { return r * 1000 + c; }
 
+  function createPlacementStats() {
+    return {
+      axis: { horizontal: 0, vertical: 0, diagonal: 0 },
+      directions: Object.fromEntries(ALL_DIRS.map(dir => [dir.key, 0]))
+    };
+  }
+
+  function registerPlacement(stats, direction) {
+    stats.axis[direction.axis]++;
+    stats.directions[direction.key]++;
+  }
+
+  function hasEnoughCoverage(placedWords) {
+    const usedAxes = new Set(placedWords.map(placed => placed.direction.axis));
+    const usedDirections = new Set(placedWords.map(placed => placed.direction.key));
+
+    if (words.length >= AXES.length && usedAxes.size < AXES.length) return false;
+    const minDirections = Math.min(words.length, 4);
+    return usedDirections.size >= minDirections;
+  }
+
+  function canPlaceWord(grid, word, row, col, direction) {
+    const endR = row + direction.dr * (word.length - 1);
+    const endC = col + direction.dc * (word.length - 1);
+    if (endR < 0 || endR >= effectiveRows || endC < 0 || endC >= effectiveCols) return null;
+
+    const positions = [];
+    let overlapCount = 0;
+    for (let i = 0; i < word.length; i++) {
+      const r = row + direction.dr * i;
+      const c = col + direction.dc * i;
+      const cell = grid[r][c];
+      if (cell !== '' && cell !== word[i]) return null;
+      if (cell !== '') overlapCount++;
+      positions.push({ r, c });
+    }
+
+    return { positions, overlapCount };
+  }
+
+  function hasPathConflict(newPathSet, placedPaths) {
+    for (const existingPath of placedPaths) {
+      let newInExisting = true;
+      for (const k of newPathSet) {
+        if (!existingPath.has(k)) {
+          newInExisting = false;
+          break;
+        }
+      }
+
+      let existingInNew = true;
+      for (const k of existingPath) {
+        if (!newPathSet.has(k)) {
+          existingInNew = false;
+          break;
+        }
+      }
+
+      if (newInExisting || existingInNew) return true;
+
+      let shared = 0;
+      for (const k of newPathSet) {
+        if (existingPath.has(k)) {
+          shared++;
+          if (shared > 1) return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function buildFallbackBoard(requireCoverage = true) {
+    const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
+    const sortedWords = [...words].sort((a, b) => b.length - a.length);
+    const placedWords = [];
+    const placedPaths = [];
+    const placementStats = createPlacementStats();
+
+    for (const word of sortedWords) {
+      const w = word.toUpperCase();
+      const dirOrder = [...ALL_DIRS].sort((a, b) => {
+        return placementStats.axis[a.axis] - placementStats.axis[b.axis]
+          || placementStats.directions[a.key] - placementStats.directions[b.key]
+          || Math.random() - 0.5;
+      });
+
+      let placed = null;
+      for (const direction of dirOrder) {
+        for (let r = 0; r < effectiveRows && !placed; r++) {
+          for (let c = 0; c < effectiveCols && !placed; c++) {
+            const candidate = canPlaceWord(grid, w, r, c, direction);
+            if (!candidate) continue;
+
+            const pathSet = new Set(candidate.positions.map(pos => cellKey(pos.r, pos.c)));
+            if (hasPathConflict(pathSet, placedPaths)) continue;
+
+            placed = { positions: candidate.positions, direction, pathSet };
+          }
+        }
+        if (placed) break;
+      }
+
+      if (!placed) {
+        return null;
+      }
+
+      for (let i = 0; i < w.length; i++) {
+        const pos = placed.positions[i];
+        grid[pos.r][pos.c] = w[i];
+      }
+
+      registerPlacement(placementStats, placed.direction);
+      placedWords.push({ word: w, positions: placed.positions, direction: placed.direction });
+      placedPaths.push(placed.pathSet);
+    }
+
+    if (requireCoverage && !hasEnoughCoverage(placedWords)) return null;
+    return { grid, placedWords };
+  }
+
   function tryGenerate() {
     const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const placedWords = [];
     const placedPaths = []; // array of Set<cellKey>
+    const placementStats = createPlacementStats();
 
     for (const word of sortedWords) {
       const w = word.toUpperCase();
-      const placement = findBestPlacement(grid, w, placedPaths);
+      const placement = findBestPlacement(grid, w, placedPaths, placementStats);
       if (!placement) return null; // retry entire board
 
       // Apply placement to grid
@@ -163,14 +292,15 @@ function generateBoard(cols, rows, words) {
         grid[pos.r][pos.c] = w[i];
         pathSet.add(cellKey(pos.r, pos.c));
       }
-      placedWords.push({ word: w, positions: placement.positions });
+      registerPlacement(placementStats, placement.direction);
+      placedWords.push({ word: w, positions: placement.positions, direction: placement.direction });
       placedPaths.push(pathSet);
     }
 
-    return { grid, placedWords };
+    return hasEnoughCoverage(placedWords) ? { grid, placedWords } : null;
   }
 
-  function findBestPlacement(grid, word, placedPaths) {
+  function findBestPlacement(grid, word, placedPaths, placementStats) {
     const candidates = [];
 
     // Shuffled start positions for randomness
@@ -183,110 +313,51 @@ function generateBoard(cols, rows, words) {
     const dirs = shuffle([...ALL_DIRS]);
 
     for (const [r, c] of starts) {
-      for (const [dr, dc] of dirs) {
-        const endR = r + dr * (word.length - 1);
-        const endC = c + dc * (word.length - 1);
-        if (endR < 0 || endR >= effectiveRows || endC < 0 || endC >= effectiveCols) continue;
+      for (const direction of dirs) {
+        const candidate = canPlaceWord(grid, word, r, c, direction);
+        if (!candidate) continue;
 
-        // Check cell compatibility
-        let valid = true;
-        const positions = [];
-        const newPathSet = new Set();
-        let overlapCount = 0;
+        const newPathSet = new Set(candidate.positions.map(pos => cellKey(pos.r, pos.c)));
+        if (hasPathConflict(newPathSet, placedPaths)) continue;
 
-        for (let i = 0; i < word.length; i++) {
-          const cr = r + dr * i;
-          const cc = c + dc * i;
-          const cell = grid[cr][cc];
-          if (cell !== '' && cell !== word[i]) { valid = false; break; }
-          if (cell !== '') overlapCount++;
-          positions.push({ r: cr, c: cc });
-          newPathSet.add(cellKey(cr, cc));
-        }
-        if (!valid) continue;
+        const axisCount = placementStats.axis[direction.axis];
+        const directionCount = placementStats.directions[direction.key];
+        const score =
+          (axisCount === 0 ? 18 : 0) +
+          Math.max(0, 10 - axisCount * 4) +
+          Math.max(0, 6 - directionCount * 2) +
+          candidate.overlapCount * 2 +
+          Math.random() * 4;
 
-        // Prevent path containment: no word's cells should be a
-        // subset of another's (prevents BEE/BEETLE problem)
-        let pathConflict = false;
-        for (const existingPath of placedPaths) {
-          // Check if new path is subset of existing
-          let newInExisting = true;
-          for (const k of newPathSet) {
-            if (!existingPath.has(k)) { newInExisting = false; break; }
-          }
-          // Check if existing is subset of new
-          let existingInNew = true;
-          for (const k of existingPath) {
-            if (!newPathSet.has(k)) { existingInNew = false; break; }
-          }
-          if (newInExisting || existingInNew) { pathConflict = true; break; }
-
-          // Limit shared cells to 1 to prevent partial overlap issues
-          let shared = 0;
-          for (const k of newPathSet) {
-            if (existingPath.has(k)) {
-              shared++;
-              if (shared > 1) break;
-            }
-          }
-          if (shared > 1) { pathConflict = true; break; }
-        }
-        if (pathConflict) continue;
-
-        // Score: prefer diagonals, penalize overlap, add randomness
-        const isDiag = (dr !== 0 && dc !== 0) ? 1 : 0;
-        const score = isDiag * 10 - overlapCount * 5 + Math.random() * 8;
-        candidates.push({ positions, score });
+        candidates.push({ positions: candidate.positions, direction, score });
 
         // Limit candidates to keep performance reasonable
-        if (candidates.length >= 40) break;
+        if (candidates.length >= 200) break;
       }
-      if (candidates.length >= 40) break;
+      if (candidates.length >= 200) break;
     }
 
     if (candidates.length === 0) return null;
 
     // Pick from top candidates with some randomness
     candidates.sort((a, b) => b.score - a.score);
-    const topN = Math.min(candidates.length, 5);
+    const topN = Math.min(candidates.length, 12);
     return candidates[Math.floor(Math.random() * topN)];
   }
 
-  // Retry up to 200 times to get a valid board
+  // Retry until we get a board with mixed directions
   let result = null;
-  for (let attempt = 0; attempt < 200; attempt++) {
+  for (let attempt = 0; attempt < 400; attempt++) {
     result = tryGenerate();
     if (result) break;
   }
 
-  // Absolute fallback — place words horizontally, wrapping rows
+  // Absolute fallback - still keep mixed directions
   if (!result) {
-    const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
-    const placedWords = [];
-    const sortedWords = [...words].sort((a, b) => b.length - a.length);
-    for (const word of sortedWords) {
-      const w = word.toUpperCase();
-      let placed = false;
-      for (let r = 0; r < effectiveRows && !placed; r++) {
-        for (let c = 0; c <= effectiveCols - w.length && !placed; c++) {
-          let canPlace = true;
-          for (let i = 0; i < w.length; i++) {
-            if (grid[r][c + i] !== '' && grid[r][c + i] !== w[i]) { canPlace = false; break; }
-          }
-          if (canPlace) {
-            const positions = [];
-            for (let i = 0; i < w.length; i++) {
-              grid[r][c + i] = w[i];
-              positions.push({ r, c: c + i });
-            }
-            placedWords.push({ word: w, positions });
-            placed = true;
-          }
-        }
-      }
-      if (!placed) placedWords.push({ word: w.toUpperCase(), positions: [] });
-    }
-    result = { grid, placedWords };
+    result = buildFallbackBoard();
+  }
+  if (!result) {
+    result = buildFallbackBoard(false);
   }
 
   // Fill blanks with random letters (full alphabet for variety)
@@ -325,6 +396,8 @@ class GameEngine {
         isDragging: false,
         startTile: null,
         currentPath: [], // Array of {r,c}
+        currentDirection: null,
+        activePointerId: null,
         pathHasCrossing: false, // true when swiping over already-selected tile
         svgLines: [], // permanently drawn lines for found words (full path arrays)
         
@@ -489,6 +562,7 @@ class GameEngine {
     boardPanel.addEventListener('pointerdown', this.onPointerDown.bind(this));
     window.addEventListener('pointermove', this.onPointerMove.bind(this));
     window.addEventListener('pointerup', this.onPointerUp.bind(this));
+    window.addEventListener('pointercancel', this.onPointerUp.bind(this));
     
     // Prevent context menu
     boardPanel.addEventListener('contextmenu', e => e.preventDefault());
@@ -592,6 +666,8 @@ class GameEngine {
     this.state.foundWords.clear();
     this.state.svgLines = [];
     this.state.tileWordCounts = {};
+    this.state.currentDirection = null;
+    this.state.activePointerId = null;
     this.state.board = generateBoard(level.cols, level.rows, level.words);
     
     // Use actual board dimensions (may be auto-expanded for long words)
@@ -736,54 +812,59 @@ class GameEngine {
     this.hideTutorial();
 
     this.sound.init(); // ensure active
+    if (e.currentTarget && typeof e.currentTarget.setPointerCapture === 'function') {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
     
     this.state.isDragging = true;
+    this.state.activePointerId = e.pointerId;
     this.state.startTile = tile;
     this.state.currentPath = [tile];
+    this.state.currentDirection = null;
     this.sound.select();
     this.highlightPath();
   }
 
   onPointerMove(e) {
     if (!this.state.isDragging) return;
+    if (this.state.activePointerId !== null && e.pointerId !== this.state.activePointerId) return;
     e.preventDefault(); // prevent scrolling
     const tile = this.getTileFromEvent(e);
     if (!tile) return;
     
     const path = this.state.currentPath;
     const last = path[path.length - 1];
-    
-    // Must be adjacent (8-directional) to the last tile in path
-    const dr = Math.abs(tile.r - last.r);
-    const dc = Math.abs(tile.c - last.c);
-    if (dr > 1 || dc > 1 || (dr === 0 && dc === 0)) return;
-    
-    // Backtracking: if tile is the second-to-last in path, pop last tile
-    if (path.length >= 2) {
-      const prev = path[path.length - 2];
-      if (prev.r === tile.r && prev.c === tile.c) {
-        path.pop();
-        // Recalculate crossing state
-        this.state.pathHasCrossing = this._pathHasDuplicates(path);
-        this.sound.select();
-        this.highlightPath();
-        this.resetIdleTimer();
-        return;
-      }
-    }
-    
-    // Check if tile is already in path (crossing)
-    const alreadyInPath = path.some(p => p.r === tile.r && p.c === tile.c);
-    if (alreadyInPath) {
-      // Mark crossing but don't add the tile again
-      this.state.pathHasCrossing = true;
+
+    const existingIndex = path.findIndex(p => p.r === tile.r && p.c === tile.c);
+    if (existingIndex !== -1) {
+      if (existingIndex === path.length - 1) return;
+      path.splice(existingIndex + 1);
+      this.state.currentDirection = path.length >= 2
+        ? this.getStepBetween(path[path.length - 2], path[path.length - 1])
+        : null;
+      this.state.pathHasCrossing = false;
+      this.sound.select();
       this.highlightPath();
       this.resetIdleTimer();
       return;
     }
-    
-    // Add tile to path
+
+    const step = this.getStepBetween(last, tile);
+    if (!step) return;
+    if (this.state.currentDirection && (step.dr !== this.state.currentDirection.dr || step.dc !== this.state.currentDirection.dc)) {
+      return;
+    }
+
+    let nextR = last.r + step.dr;
+    let nextC = last.c + step.dc;
+    while (nextR !== tile.r || nextC !== tile.c) {
+      path.push({ r: nextR, c: nextC });
+      nextR += step.dr;
+      nextC += step.dc;
+    }
     path.push({ r: tile.r, c: tile.c });
+    this.state.currentDirection = step;
+    this.state.pathHasCrossing = false;
     this.sound.select();
     this.highlightPath();
     this.resetIdleTimer();
@@ -799,19 +880,50 @@ class GameEngine {
     return false;
   }
 
+  getStepBetween(from, to) {
+    const dr = to.r - from.r;
+    const dc = to.c - from.c;
+    if (dr === 0 && dc === 0) return null;
+
+    const absDr = Math.abs(dr);
+    const absDc = Math.abs(dc);
+    const isStraight = dr === 0 || dc === 0 || absDr === absDc;
+    if (!isStraight) return null;
+
+    return {
+      dr: Math.sign(dr),
+      dc: Math.sign(dc)
+    };
+  }
+
+  pathsMatch(pathA, pathB) {
+    if (!pathA || !pathB || pathA.length !== pathB.length) return false;
+    for (let i = 0; i < pathA.length; i++) {
+      if (pathA[i].r !== pathB[i].r || pathA[i].c !== pathB[i].c) return false;
+    }
+    return true;
+  }
+
+  findMatchedWord(path) {
+    if (!this.state.board) return null;
+
+    for (const placedWord of this.state.board.placedWords) {
+      if (this.state.foundWords.has(placedWord.word)) continue;
+      if (this.pathsMatch(path, placedWord.positions)) return placedWord.word;
+      if (this.pathsMatch(path, [...placedWord.positions].reverse())) return placedWord.word;
+    }
+
+    return null;
+  }
+
   onPointerUp(e) {
     if (!this.state.isDragging) return;
+    if (this.state.activePointerId !== null && e.pointerId !== this.state.activePointerId) return;
     this.state.isDragging = false;
+    this.state.activePointerId = null;
     
-    const word = this.state.currentPath.map(p => this.state.board.grid[p.r][p.c]).join('');
-    const reverseWord = word.split('').reverse().join('');
-    
-    const expectedWords = this.state.level.words;
-    let found = false;
-    let text = "";
-    
-    if (expectedWords.includes(word) && !this.state.foundWords.has(word)) { found = true; text = word; }
-    else if (expectedWords.includes(reverseWord) && !this.state.foundWords.has(reverseWord)) { found = true; text = reverseWord; }
+    const text = this.findMatchedWord(this.state.currentPath);
+    const found = Boolean(text);
     
     if (found) {
         this.sound.found();
@@ -851,6 +963,7 @@ class GameEngine {
     
     // Reset selection
     this.state.currentPath = [];
+    this.state.currentDirection = null;
     this.state.pathHasCrossing = false;
     this.highlightPath(); // clears selection
   }
@@ -913,16 +1026,11 @@ class GameEngine {
     const el = this.getTileElement(r, c);
     if (!el) return null;
     
-    // Get position relative to the svgOverlay container (board-container)
-    const container = document.getElementById('board-container').getBoundingClientRect();
+    const overlayRect = this.svgOverlay.getBoundingClientRect();
     const rect = el.getBoundingClientRect();
-    
-    // Also account for the overlay offset (1rem = 16px) 
-    // Wait, the overlay is position: absolute with top: 1rem, left: 1rem. So it exactly matches the padding of board-container!
-    // That means the coordinate system of SVG starts exactly where the grid content box starts.
     return {
-        x: rect.left - container.left - 16 + rect.width / 2,
-        y: rect.top - container.top - 16 + rect.height / 2
+        x: rect.left - overlayRect.left + rect.width / 2,
+        y: rect.top - overlayRect.top + rect.height / 2
     };
   }
 
