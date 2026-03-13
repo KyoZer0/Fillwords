@@ -2,22 +2,20 @@ export default function PlayArcadePage() {
     return (
         <>
             <style>{`
-                html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+                .island-nav, .island-mobile, footer, .site-footer { display: none !important; }
+                main { padding: 0 !important; }
             `}</style>
             <iframe
                 src="/game-arcade/index.html"
                 style={{
-                    position: 'fixed',
-                    inset: 0,
                     width: '100%',
-                    height: '100%',
+                    height: '100dvh',
                     border: 'none',
                     display: 'block',
-                    overflow: 'hidden',
                 }}
                 title="FillWords Arcade"
                 allow="autoplay"
-                scrolling="no"
+                loading="eager"
             />
         </>
     );

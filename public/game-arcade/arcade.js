@@ -478,6 +478,8 @@ class ArcadeEngine {
     this.catGrid = document.getElementById('category-grid');
     this.collectionGrid = document.getElementById('collection-grid');
     this.lvlGrid = document.getElementById('level-grid');
+    this.boardPanel = document.querySelector('.board-panel-arcade');
+    this.boardContainer = document.getElementById('board-container');
     this.gridEl = document.getElementById('letter-grid');
     this.progressDots = document.getElementById('progress-dots');
     this.progressCount = document.getElementById('progress-count');
@@ -504,7 +506,7 @@ class ArcadeEngine {
     try {
       const raw = localStorage.getItem('fillwords_arcade_progress');
       if (raw) saved = JSON.parse(raw);
-    } catch(e) {}
+    } catch {}
     const progress = { ...saved };
     CATEGORIES.forEach(cat => {
       const firstLevelId = cat.levels[0]?.id;
@@ -523,7 +525,7 @@ class ArcadeEngine {
     try {
       const saved = localStorage.getItem('fillwords_arcade_stats');
       if (saved) return JSON.parse(saved);
-    } catch(e) {}
+    } catch {}
     return { levelsPlayed: 0, highestScore: 0, streak: 0, lastPlayedDate: null };
   }
 
@@ -535,7 +537,7 @@ class ArcadeEngine {
     try {
       const saved = localStorage.getItem('fillwords_arcade_level_records');
       if (saved) return JSON.parse(saved);
-    } catch (e) {}
+    } catch {}
     return {};
   }
 
@@ -561,6 +563,43 @@ class ArcadeEngine {
       silver: words * 120 + baseTime * 4 + 500,
       gold: words * 160 + baseTime * 7 + 650
     };
+  }
+
+  fitBoardToViewport() {
+    if (!this.state.board || !this.boardPanel || !this.boardContainer) return;
+
+    const cols = this.state.board.cols || this.state.level?.cols || 0;
+    const rows = this.state.board.rows || this.state.level?.rows || 0;
+    if (!cols || !rows) return;
+
+    const styles = getComputedStyle(this.boardContainer);
+    const baseTileSize = parseFloat(styles.getPropertyValue('--tile-size')) || 46;
+    const baseFontSize = parseFloat(styles.getPropertyValue('--tile-font-size')) || 19;
+    const baseGap = parseFloat(styles.getPropertyValue('--board-gap')) || 6;
+    const basePadding = parseFloat(styles.getPropertyValue('--board-padding')) || 16;
+
+    const viewportWidth = window.visualViewport?.width || window.innerWidth;
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const availableWidth = Math.min(this.boardPanel.clientWidth, viewportWidth) - 2;
+    const availableHeight = Math.min(this.boardPanel.clientHeight, viewportHeight) - 2;
+
+    const boardWidth = cols * baseTileSize + Math.max(0, cols - 1) * baseGap + basePadding * 2;
+    const boardHeight = rows * baseTileSize + Math.max(0, rows - 1) * baseGap + basePadding * 2;
+    const scale = Math.min(1, availableWidth / boardWidth, availableHeight / boardHeight);
+    const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+
+    this.boardContainer.style.setProperty('--tile-size', `${baseTileSize * safeScale}px`);
+    this.boardContainer.style.setProperty('--tile-font-size', `${Math.max(9, baseFontSize * safeScale)}px`);
+    this.boardContainer.style.setProperty('--board-gap', `${baseGap * safeScale}px`);
+    this.boardContainer.style.setProperty('--board-padding', `${basePadding * safeScale}px`);
+  }
+
+  refreshBoardLayout() {
+    if (!this.state.board) return;
+    requestAnimationFrame(() => {
+      this.fitBoardToViewport();
+      this.updateSVG();
+    });
   }
 
   calculateArcadeStars(level, result) {
@@ -999,9 +1038,8 @@ class ArcadeEngine {
     this.updateTimerUI();
     this.updatePowerUpsUI();
     this.updateModifierUI();
-    this.updateSVG();
-    
     this.switchScreen('game');
+    this.refreshBoardLayout();
     
     gsap.fromTo('.letter-tile', 
       { opacity: 0, scale: 0.5 }, 
@@ -1684,6 +1722,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('resize', () => {
    if (window.game && window.game.state.board) {
-       window.game.updateSVG();
+        window.game.refreshBoardLayout();
+    }
+});
+
+window.visualViewport?.addEventListener('resize', () => {
+   if (window.game && window.game.state.board) {
+       window.game.refreshBoardLayout();
    }
 });

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { categories } from '../lib/gameData';
 
 export const metadata: Metadata = {
     title: 'Sitemap – All Pages',

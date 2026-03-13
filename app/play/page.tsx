@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { KeyboardEvent } from 'react';
 
 const VARIANTS = [
     {
@@ -55,6 +56,19 @@ const VARIANTS = [
 export default function PlayPage() {
     const router = useRouter();
 
+    const activateCard = (href?: string | null) => {
+        if (href) {
+            router.push(href);
+        }
+    };
+
+    const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>, href?: string | null) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            activateCard(href);
+        }
+    };
+
     return (
         <>
             <style>{`
@@ -91,7 +105,7 @@ export default function PlayPage() {
                     padding: '2rem 1.5rem 2.5rem',
                 }}>
                     <h1 style={{
-                        fontFamily: "'Outfit', system-ui, sans-serif",
+                        fontFamily: 'var(--font-display)',
                         fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
                         fontWeight: 800,
                         color: '#0c3547',
@@ -124,7 +138,19 @@ export default function PlayPage() {
                     {VARIANTS.map((v) => (
                         <div
                             key={v.id}
-                            onClick={() => { if (!v.locked && v.href) router.push(v.href); }}
+                            onClick={() => {
+                                if (!v.locked) {
+                                    activateCard(v.href);
+                                }
+                            }}
+                            onKeyDown={(event) => {
+                                if (!v.locked) {
+                                    handleCardKeyDown(event, v.href);
+                                }
+                            }}
+                            role={!v.locked ? 'link' : undefined}
+                            tabIndex={!v.locked ? 0 : undefined}
+                            aria-disabled={v.locked || undefined}
                             style={{
                                 background: 'white',
                                 border: '1.5px solid rgba(14,116,144,0.12)',
@@ -132,7 +158,7 @@ export default function PlayPage() {
                                 padding: '1.75rem',
                                 cursor: v.locked ? 'default' : 'pointer',
                                 opacity: v.locked ? 0.55 : 1,
-                                transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                                transition: 'transform var(--transition), box-shadow var(--transition), border-color var(--transition)',
                                 display: 'flex',
                                 flexDirection: 'column' as const,
                                 gap: '1rem',
@@ -147,7 +173,19 @@ export default function PlayPage() {
                                     (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 40px rgba(14,116,144,0.12)';
                                 }
                             }}
+                            onFocus={(e) => {
+                                if (!v.locked) {
+                                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+                                    (e.currentTarget as HTMLDivElement).style.boxShadow = '0 10px 30px rgba(14,116,144,0.12)';
+                                }
+                            }}
                             onMouseLeave={(e) => {
+                                if (!v.locked) {
+                                    (e.currentTarget as HTMLDivElement).style.transform = '';
+                                    (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(14,116,144,0.08)';
+                                }
+                            }}
+                            onBlur={(e) => {
                                 if (!v.locked) {
                                     (e.currentTarget as HTMLDivElement).style.transform = '';
                                     (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(14,116,144,0.08)';
@@ -242,7 +280,7 @@ export default function PlayPage() {
                                         borderRadius: '9999px',
                                         fontSize: '0.88rem',
                                         fontWeight: 700,
-                                        fontFamily: "'Outfit', system-ui, sans-serif",
+                                        fontFamily: 'var(--font-display)',
                                         boxShadow: '0 3px 0 #c9a300',
                                     }}>
                                         Play Now

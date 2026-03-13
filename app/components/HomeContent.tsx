@@ -13,12 +13,18 @@ if (typeof window !== 'undefined') {
 
 const FloatingTiles = () => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const letters = ['W', 'O', 'R', 'D', 'S', 'P', 'L', 'A', 'Y', 'F', 'U', 'N'];
+    const positions = letters.map((_, index) => ({
+        top: `${12 + ((index * 17) % 76)}%`,
+        left: `${8 + ((index * 23) % 84)}%`
+    }));
 
     useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         if (!containerRef.current) return;
         const ctx = gsap.context(() => {
-            const tiles = gsap.utils.toArray('.bg-tile');
-            tiles.forEach((tile: any, i) => {
+            const tiles = gsap.utils.toArray<HTMLElement>('.bg-tile');
+            tiles.forEach((tile, i) => {
                 gsap.to(tile, {
                     y: 'random(-50, 50)',
                     x: 'random(-30, 30)',
@@ -34,14 +40,13 @@ const FloatingTiles = () => {
         return () => ctx.revert();
     }, []);
 
-    const letters = ['W', 'O', 'R', 'D', 'S', 'P', 'L', 'A', 'Y', 'F', 'U', 'N'];
     return (
         <div ref={containerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
             {letters.map((letter, i) => (
                 <div key={i} className="bg-tile" style={{
                     position: 'absolute',
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
+                    top: positions[i].top,
+                    left: positions[i].left,
                     fontSize: '2rem',
                     fontFamily: 'var(--font-display)',
                     fontWeight: 700,
@@ -64,8 +69,32 @@ const FloatingTiles = () => {
     );
 };
 
+function handleActionKeyDown(event: React.KeyboardEvent<HTMLElement>, action: () => void) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        action();
+    }
+}
+
 const VariantCard = ({ title, tagline, desc, icon, color, href, locked = false }: { title: string, tagline: string, desc: string, icon: React.ReactNode, color: string, href?: string | null, locked?: boolean }) => {
     const router = useRouter();
+    const isInteractive = !locked && Boolean(href);
+
+    const setCardState = (element: HTMLDivElement, active: boolean) => {
+        if (!isInteractive) return;
+        element.style.transform = active ? 'translateY(-8px)' : 'translateY(0)';
+        element.style.borderColor = active ? color : 'var(--border)';
+        element.style.boxShadow = active
+            ? `0 24px 48px ${color}20, inset 0 2px 10px rgba(255,255,255,0.1)`
+            : '0 4px 12px rgba(0, 0, 0, 0.02), inset 0 2px 10px rgba(255, 255, 255, 0.05)';
+
+        const glow = element.querySelector('.card-glow') as HTMLElement | null;
+        if (glow) glow.style.opacity = active ? '1' : '0';
+
+        const iconEl = element.querySelector('.card-icon') as HTMLElement | null;
+        if (iconEl) iconEl.style.transform = active ? 'scale(1.1) translateY(-4px)' : 'scale(1) translateY(0)';
+    };
+
     return (
         <div className="stat-swipe-container variant-card" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1.25rem',
@@ -80,31 +109,27 @@ const VariantCard = ({ title, tagline, desc, icon, color, href, locked = false }
             cursor: locked ? 'default' : 'pointer',
             opacity: locked ? 0.6 : 1
         }}
+            role={isInteractive ? 'link' : undefined}
+            tabIndex={isInteractive ? 0 : undefined}
+            aria-disabled={locked || undefined}
             onClick={() => {
-                if (!locked && href) {
+                if (isInteractive && href) {
                     router.push(href);
                 }
             }}
+            onKeyDown={(event) => {
+                if (isInteractive && href) {
+                    handleActionKeyDown(event, () => router.push(href));
+                }
+            }}
             onMouseEnter={(e) => {
-                if (locked) return;
-                e.currentTarget.style.transform = 'translateY(-8px)';
-                e.currentTarget.style.borderColor = color;
-                e.currentTarget.style.boxShadow = `0 24px 48px ${color}20, inset 0 2px 10px rgba(255,255,255,0.1)`;
-                const glow = e.currentTarget.querySelector('.card-glow') as HTMLElement;
-                if (glow) glow.style.opacity = '1';
-                const iconEl = e.currentTarget.querySelector('.card-icon') as HTMLElement;
-                if (iconEl) iconEl.style.transform = 'scale(1.1) translateY(-4px)';
+                setCardState(e.currentTarget, true);
             }}
             onMouseLeave={(e) => {
-                if (locked) return;
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'var(--border)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.02), inset 0 2px 10px rgba(255, 255, 255, 0.05)';
-                const glow = e.currentTarget.querySelector('.card-glow') as HTMLElement;
-                if (glow) glow.style.opacity = '0';
-                const iconEl = e.currentTarget.querySelector('.card-icon') as HTMLElement;
-                if (iconEl) iconEl.style.transform = 'scale(1) translateY(0)';
+                setCardState(e.currentTarget, false);
             }}
+            onFocus={(e) => setCardState(e.currentTarget, true)}
+            onBlur={(e) => setCardState(e.currentTarget, false)}
         >
             {/* Animated Glow effect */}
             {!locked && (
@@ -182,16 +207,38 @@ const VariantCard = ({ title, tagline, desc, icon, color, href, locked = false }
 
 const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title: string, tagline: string, desc: string, icon: React.ReactNode, color: string, href?: string | null }) => {
     const router = useRouter();
+
+    const setCardState = (element: HTMLDivElement, active: boolean) => {
+        element.style.transform = active ? 'translateY(-12px) rotateX(4deg)' : 'translateY(0) rotateX(0)';
+        element.style.borderColor = active ? `${color}66` : `${color}26`;
+        element.style.boxShadow = active
+            ? `0 32px 64px ${color}26, inset 0 2px 20px rgba(255,255,255,0.8), 0 0 20px rgba(255, 215, 0, 0.15)`
+            : `0 8px 32px ${color}14, inset 0 2px 10px rgba(255, 255, 255, 0.5)`;
+
+        const elements = element.querySelectorAll<HTMLElement>('.arcade-float');
+        elements.forEach((el, index) => {
+            el.style.transform = active
+                ? `translateZ(${30 + index * 20}px) translateY(-15px) rotate(${index % 2 === 0 ? '15deg' : '-15deg'}) scale(1.2)`
+                : 'translateZ(0) translateY(0) rotate(0) scale(1)';
+            el.style.filter = active
+                ? 'drop-shadow(0 15px 20px rgba(0,0,0,0.15))'
+                : 'drop-shadow(0 4px 8px rgba(0,0,0,0.06))';
+        });
+
+        const iconEl = element.querySelector('.card-icon') as HTMLElement | null;
+        if (iconEl) iconEl.style.transform = active ? 'scale(1.1) translateZ(40px)' : 'scale(1) translateZ(0)';
+    };
+
     return (
         <div className="stat-swipe-container variant-card arcade-card" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1.25rem',
             background: 'var(--white)',
-            border: `1px solid rgba(173, 40, 211, 0.15)`,
+            border: `1px solid ${color}26`,
             borderRadius: '24px',
             padding: '2.5rem 2rem', width: '100%',
             position: 'relative', overflow: 'hidden', height: '100%',
             transition: 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
-            boxShadow: `0 8px 32px rgba(173, 40, 211, 0.08), inset 0 2px 10px rgba(255, 255, 255, 0.5)`,
+            boxShadow: `0 8px 32px ${color}14, inset 0 2px 10px rgba(255, 255, 255, 0.5)`,
             isolation: 'isolate',
             cursor: 'pointer',
             perspective: '1000px'
@@ -199,36 +246,21 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
             onClick={() => {
                 if (href) router.push(href);
             }}
+            onKeyDown={(event) => {
+                if (href) {
+                    handleActionKeyDown(event, () => router.push(href));
+                }
+            }}
+            role={href ? 'link' : undefined}
+            tabIndex={href ? 0 : undefined}
             onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-12px) rotateX(4deg)';
-                e.currentTarget.style.borderColor = 'rgba(173, 40, 211, 0.4)';
-                e.currentTarget.style.boxShadow = `0 32px 64px rgba(173, 40, 211, 0.15), inset 0 2px 20px rgba(255,255,255,0.8), 0 0 20px rgba(255, 215, 0, 0.15)`;
-
-                const elements = e.currentTarget.querySelectorAll('.arcade-float');
-                elements.forEach((el, index) => {
-                    const htmlEl = el as HTMLElement;
-                    htmlEl.style.transform = `translateZ(${30 + index * 20}px) translateY(-15px) rotate(${index % 2 === 0 ? '15deg' : '-15deg'}) scale(1.2)`;
-                    htmlEl.style.filter = `drop-shadow(0 15px 20px rgba(0,0,0,0.15))`;
-                });
-
-                const iconEl = e.currentTarget.querySelector('.card-icon') as HTMLElement;
-                if (iconEl) iconEl.style.transform = 'scale(1.1) translateZ(40px)';
+                setCardState(e.currentTarget, true);
             }}
             onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) rotateX(0)';
-                e.currentTarget.style.borderColor = `rgba(173, 40, 211, 0.15)`;
-                e.currentTarget.style.boxShadow = `0 8px 32px rgba(173, 40, 211, 0.08), inset 0 2px 10px rgba(255, 255, 255, 0.5)`;
-
-                const elements = e.currentTarget.querySelectorAll('.arcade-float');
-                elements.forEach((el) => {
-                    const htmlEl = el as HTMLElement;
-                    htmlEl.style.transform = `translateZ(0) translateY(0) rotate(0) scale(1)`;
-                    htmlEl.style.filter = `drop-shadow(0 4px 8px rgba(0,0,0,0.06))`;
-                });
-
-                const iconEl = e.currentTarget.querySelector('.card-icon') as HTMLElement;
-                if (iconEl) iconEl.style.transform = 'scale(1) translateZ(0)';
+                setCardState(e.currentTarget, false);
             }}
+            onFocus={(e) => setCardState(e.currentTarget, true)}
+            onBlur={(e) => setCardState(e.currentTarget, false)}
         >
             {/* 3D Floating Elements */}
             <div className="arcade-float" style={{
@@ -259,7 +291,7 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
             <div className="arcade-float" style={{
                 position: 'absolute', top: '-10%', left: '50%',
                 width: '80px', height: '30px', borderRadius: '15px',
-                background: 'linear-gradient(135deg, #ad28d3, #7e22ce)', // Purple
+                background: `linear-gradient(135deg, ${color}, #7e22ce)`,
                 transformStyle: 'preserve-3d',
                 transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s',
                 zIndex: 0, opacity: 0.4,
@@ -276,7 +308,7 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
                     position: 'absolute', top: '50%', left: '50%',
                     width: '120px', height: '120px',
                     marginLeft: '-60px', marginTop: '-60px',
-                    border: '2px solid rgba(173, 40, 211, 0.4)',
+                    border: `2px solid ${color}66`,
                     borderRadius: '50%',
                     transformStyle: 'preserve-3d',
                     transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -304,8 +336,8 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
                     .arcade-card:hover .arcade-orbit {
                         animation: orbit-spin 4s linear infinite;
                         opacity: 1;
-                        border-color: rgba(173, 40, 211, 0.8);
-                        box-shadow: inset 0 0 20px rgba(173, 40, 211, 0.2);
+                        border-color: ${color};
+                        box-shadow: inset 0 0 20px ${color}33;
                     }
                     .arcade-card:not(:hover) .arcade-orbit {
                         transform: rotateX(70deg) rotateZ(45deg); /* static angled resting state */
@@ -314,17 +346,17 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
 
                 <div className="card-icon" style={{
                     width: '48px', height: '48px', borderRadius: '14px',
-                    background: `linear-gradient(135deg, rgba(173, 40, 211, 0.1), rgba(173, 40, 211, 0.2))`,
-                    color: '#ad28d3',
-                    border: `1px solid rgba(173, 40, 211, 0.3)`,
+                    background: `linear-gradient(135deg, ${color}1a, ${color}33)`,
+                    color: color,
+                    border: `1px solid ${color}4d`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: `0 8px 16px rgba(173, 40, 211, 0.15), inset 0 2px 6px rgba(255,255,255,0.8)`,
+                    boxShadow: `0 8px 16px ${color}26, inset 0 2px 6px rgba(255,255,255,0.8)`,
                     transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     transformStyle: 'preserve-3d',
                     zIndex: 2,
                     position: 'relative'
                 }}>
-                    {React.cloneElement(icon as React.ReactElement<any>, { width: 22, height: 22 } as any)}
+                    {React.cloneElement(icon as React.ReactElement<{ width?: number; height?: number }>, { width: 22, height: 22 })}
                 </div>
             </div>
 
@@ -332,7 +364,7 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
                 <h3 style={{ fontFamily: 'var(--font-arcade), var(--font-display)', fontSize: '1.4rem', fontWeight: 400, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                     {title}
                 </h3>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ad28d3', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: color, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {tagline}
                 </div>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0, flexGrow: 1, maxWidth: '90%' }}>
@@ -370,40 +402,17 @@ const ArcadeVariantCard = ({ title, tagline, desc, icon, color, href }: { title:
     );
 };
 
-const Tile = ({ char, yellow = false }: { char: string, yellow?: boolean }) => (
-    <div className="stat-tile" style={{
-        width: 'clamp(2.2rem, 8vw, 3.5rem)',
-        height: 'clamp(2.2rem, 8vw, 3.5rem)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: yellow ? 'var(--accent)' : 'var(--bg-card)',
-        color: yellow ? '#000' : 'var(--text-primary)',
-        fontFamily: 'var(--font-display)',
-        fontSize: 'clamp(1.2rem, 5vw, 2rem)',
-        fontWeight: 800,
-        borderRadius: '8px',
-        boxShadow: yellow ? '0 4px 12px rgba(201, 163, 0, 0.3), 0 4px 0 #c9a300' : '0 4px 12px rgba(14, 116, 144, 0.06), 0 4px 0 rgba(14, 116, 144, 0.1)',
-        border: yellow ? '2px solid #e5b900' : '2px solid rgba(14, 116, 144, 0.1)',
-        position: 'relative',
-        textTransform: 'uppercase'
-    }}>
-        {char}
-        {!yellow && /[A-Z]/.test(char) && (
-            <span style={{ position: 'absolute', bottom: '2px', right: '4px', fontSize: 'clamp(0.45rem, 2vw, 0.65rem)', fontWeight: 600, color: 'var(--text-muted)' }}>
-                {{ 'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10 }[char as string] || 1}
-            </span>
-        )}
-    </div>
-);
-
 export default function HomeContent() {
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+
         const ctx = gsap.context(() => {
             // Stats Animation Setup (Removed specific SwipeStat animations, ThemeCard handles its own hover)
-            gsap.utils.toArray('.stat-swipe-container').forEach((container: any, i) => {
+            gsap.utils.toArray<HTMLElement>('.stat-swipe-container').forEach((container, i) => {
                 gsap.fromTo(container,
                     { opacity: 0, y: 20 },
                     {
@@ -417,7 +426,7 @@ export default function HomeContent() {
             });
 
             // Features Animation
-            gsap.utils.toArray('.feature-card').forEach((card: any) => {
+            gsap.utils.toArray<HTMLElement>('.feature-card').forEach((card) => {
                 gsap.fromTo(card,
                     { y: 50, opacity: 0 },
                     {
@@ -434,7 +443,7 @@ export default function HomeContent() {
             });
 
             // Swipe lines animation in Features
-            gsap.utils.toArray('.swipe-line').forEach((line: any) => {
+            gsap.utils.toArray<HTMLElement>('.swipe-line').forEach((line) => {
                 gsap.fromTo(line,
                     { scaleX: 0, transformOrigin: 'left center' },
                     {
@@ -451,7 +460,7 @@ export default function HomeContent() {
             });
 
             // Blog Cards Animation
-            gsap.utils.toArray('.blog-card').forEach((card: any) => {
+            gsap.utils.toArray<HTMLElement>('.blog-card').forEach((card) => {
                 gsap.fromTo(card,
                     { scale: 0.95, opacity: 0, y: 30 },
                     {
@@ -692,7 +701,7 @@ export default function HomeContent() {
 
                             <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px dashed var(--border)', textAlign: 'center' }}>
                                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-                                    "It's like uncovering a hidden message, one swipe at a time."
+                                    &ldquo;It&apos;s like uncovering a hidden message, one swipe at a time.&rdquo;
                                 </p>
                             </div>
                         </div>
@@ -706,7 +715,7 @@ export default function HomeContent() {
                 <div className="container">
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', marginBottom: '2.5rem' }}>
                         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 800, color: 'var(--text-primary)', position: 'relative' }}>
-                            From the Editor's Desk
+                            From the Editor&apos;s Desk
                             <div className="swipe-line" style={{
                                 position: 'absolute', bottom: '8px', left: '-2%', width: '104%', height: '10px', background: 'rgba(14, 116, 144, 0.2)', borderRadius: '4px', zIndex: -1
                             }}></div>

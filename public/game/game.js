@@ -436,10 +436,49 @@ class GameEngine {
     this.lvlGrid = document.getElementById('level-grid');
     
     // Game elements
+    this.boardPanel = document.querySelector('.board-panel');
+    this.boardContainer = document.getElementById('board-container');
     this.gridEl = document.getElementById('letter-grid');
     this.wordListEl = document.getElementById('word-list');
     this.svgOverlay = document.getElementById('swipe-overlay');
     this.tutorialEl = document.getElementById('game-tutorial');
+  }
+
+  fitBoardToViewport() {
+    if (!this.state.board || !this.boardPanel || !this.boardContainer) return;
+
+    const cols = this.state.board.cols || this.state.level?.cols || 0;
+    const rows = this.state.board.rows || this.state.level?.rows || 0;
+    if (!cols || !rows) return;
+
+    const styles = getComputedStyle(this.boardContainer);
+    const baseTileSize = parseFloat(styles.getPropertyValue('--tile-size')) || 48;
+    const baseFontSize = parseFloat(styles.getPropertyValue('--tile-font-size')) || 21;
+    const baseGap = parseFloat(styles.getPropertyValue('--board-gap')) || 7;
+    const basePadding = parseFloat(styles.getPropertyValue('--board-padding')) || 16;
+
+    const viewportWidth = window.visualViewport?.width || window.innerWidth;
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const availableWidth = Math.min(this.boardPanel.clientWidth, viewportWidth) - 2;
+    const availableHeight = Math.min(this.boardPanel.clientHeight, viewportHeight) - 2;
+
+    const boardWidth = cols * baseTileSize + Math.max(0, cols - 1) * baseGap + basePadding * 2;
+    const boardHeight = rows * baseTileSize + Math.max(0, rows - 1) * baseGap + basePadding * 2;
+    const scale = Math.min(1, availableWidth / boardWidth, availableHeight / boardHeight);
+    const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+
+    this.boardContainer.style.setProperty('--tile-size', `${baseTileSize * safeScale}px`);
+    this.boardContainer.style.setProperty('--tile-font-size', `${Math.max(9, baseFontSize * safeScale)}px`);
+    this.boardContainer.style.setProperty('--board-gap', `${baseGap * safeScale}px`);
+    this.boardContainer.style.setProperty('--board-padding', `${basePadding * safeScale}px`);
+  }
+
+  refreshBoardLayout() {
+    if (!this.state.board) return;
+    requestAnimationFrame(() => {
+      this.fitBoardToViewport();
+      this.updateSVG();
+    });
   }
 
   loadProgress() {
@@ -447,7 +486,7 @@ class GameEngine {
     try {
       const raw = localStorage.getItem('fillwords_progress');
       if (raw) saved = JSON.parse(raw);
-    } catch(e) {}
+    } catch {}
     // Merge: ensure every category has at least its first level unlocked
     const progress = { ...saved };
     CATEGORIES.forEach(cat => {
@@ -467,7 +506,7 @@ class GameEngine {
     try {
       const saved = localStorage.getItem('fillwords_stats');
       if (saved) return JSON.parse(saved);
-    } catch(e) {}
+    } catch {}
     return { levelsCompleted: 0, wordsFound: 0, lastPlayedDate: null, streak: 0 };
   }
 
@@ -479,7 +518,7 @@ class GameEngine {
     try {
       const saved = localStorage.getItem('fillwords_level_records');
       if (saved) return JSON.parse(saved);
-    } catch (e) {}
+    } catch {}
     return {};
   }
 
@@ -831,7 +870,7 @@ class GameEngine {
     document.getElementById('level-cat-mastery').innerHTML = this.renderCategoryMastery(progress);
     this.lvlGrid.innerHTML = '';
     
-    cat.levels.forEach((lvl, idx) => {
+    cat.levels.forEach((lvl) => {
       const isUnlocked = this.state.unlockedLevels[cat.slug]?.includes(lvl.id);
       const record = this.getLevelRecord(lvl.id);
       const stars = record?.stars || 0;
@@ -920,8 +959,8 @@ class GameEngine {
         this.wordListEl.appendChild(span);
     });
     
-    this.updateSVG();
     this.switchScreen('game');
+    this.refreshBoardLayout();
     
     // GSAP Intro
     gsap.fromTo('.letter-tile', 
@@ -1282,7 +1321,7 @@ class GameEngine {
         
         // Make all tiles fall
         const tiles = document.querySelectorAll('.letter-tile');
-        tiles.forEach((tile, i) => {
+        tiles.forEach((tile) => {
             setTimeout(() => {
                 tile.classList.add('tile-fall');
             }, Math.random() * 400);
@@ -1323,6 +1362,12 @@ window.addEventListener('DOMContentLoaded', () => {
 // Update SVG when resizing window
 window.addEventListener('resize', () => {
    if (window.game && window.game.state.board) {
-       window.game.updateSVG();
+        window.game.refreshBoardLayout();
+    }
+});
+
+window.visualViewport?.addEventListener('resize', () => {
+   if (window.game && window.game.state.board) {
+       window.game.refreshBoardLayout();
    }
 });

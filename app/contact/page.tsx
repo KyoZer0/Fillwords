@@ -74,7 +74,7 @@ export default function ContactPage() {
                     <h2>Send Us a Message</h2>
 
                     {submitted ? (
-                        <div className="card" style={{
+                        <div className="card" aria-live="polite" style={{
                             textAlign: 'center',
                             padding: '3rem 2rem',
                             borderColor: 'var(--accent)',
@@ -98,9 +98,11 @@ export default function ContactPage() {
                                     Your Name
                                 </label>
                                 <input
+                                    name="name"
                                     id="name"
                                     type="text"
                                     required
+                                    autoComplete="name"
                                     placeholder="Enter your name"
                                     value={formData.name}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
@@ -112,7 +114,6 @@ export default function ContactPage() {
                                         background: 'var(--bg-card)',
                                         color: 'var(--text)',
                                         fontSize: '1rem',
-                                        outline: 'none',
                                         transition: 'border-color var(--transition)',
                                     }}
                                 />
@@ -129,9 +130,11 @@ export default function ContactPage() {
                                     Email Address
                                 </label>
                                 <input
+                                    name="email"
                                     id="email"
                                     type="email"
                                     required
+                                    autoComplete="email"
                                     placeholder="your@email.com"
                                     value={formData.email}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
@@ -143,7 +146,6 @@ export default function ContactPage() {
                                         background: 'var(--bg-card)',
                                         color: 'var(--text)',
                                         fontSize: '1rem',
-                                        outline: 'none',
                                         transition: 'border-color var(--transition)',
                                     }}
                                 />
@@ -160,6 +162,7 @@ export default function ContactPage() {
                                     Subject
                                 </label>
                                 <select
+                                    name="subject"
                                     id="subject"
                                     required
                                     value={formData.subject}
@@ -172,7 +175,6 @@ export default function ContactPage() {
                                         background: 'var(--bg-card)',
                                         color: 'var(--text)',
                                         fontSize: '1rem',
-                                        outline: 'none',
                                     }}
                                 >
                                     <option value="">Select a topic</option>
@@ -196,9 +198,11 @@ export default function ContactPage() {
                                     Message
                                 </label>
                                 <textarea
+                                    name="message"
                                     id="message"
                                     required
                                     rows={6}
+                                    autoComplete="off"
                                     placeholder="Tell us what's on your mind..."
                                     value={formData.message}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
@@ -210,7 +214,6 @@ export default function ContactPage() {
                                         background: 'var(--bg-card)',
                                         color: 'var(--text)',
                                         fontSize: '1rem',
-                                        outline: 'none',
                                         resize: 'vertical',
                                         fontFamily: 'inherit',
                                     }}

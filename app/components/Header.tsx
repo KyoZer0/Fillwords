@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 const navLinks = [
@@ -10,10 +10,37 @@ const navLinks = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      if (wasOpenRef.current) {
+        buttonRef.current?.focus();
+      }
+      wasOpenRef.current = false;
+      return;
+    }
+
+    wasOpenRef.current = true;
+
+    const firstLink = mobileNavRef.current?.querySelector<HTMLAnchorElement>('a');
+    firstLink?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   return (
     <>
-      <nav className="island-nav">
+      <nav className="island-nav" aria-label="Primary">
         <Link href="/" className="island-brand">
           FillWords
         </Link>
@@ -35,16 +62,24 @@ export default function Header() {
         </Link>
 
         <button
+          ref={buttonRef}
           onClick={() => setIsOpen(!isOpen)}
           className="island-menu-btn"
           aria-label="Toggle menu"
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
         >
           {isOpen ? '✕' : '☰'}
         </button>
       </nav>
 
       {isOpen && (
-        <div className="island-mobile">
+        <nav
+          ref={mobileNavRef}
+          id="mobile-navigation"
+          className="island-mobile"
+          aria-label="Mobile"
+        >
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -57,7 +92,7 @@ export default function Header() {
           <Link href="/play" onClick={() => setIsOpen(false)}>
             Play Now
           </Link>
-        </div>
+        </nav>
       )}
     </>
   );

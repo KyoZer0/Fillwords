@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { categories } from './lib/gameData';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://fillwords.com';

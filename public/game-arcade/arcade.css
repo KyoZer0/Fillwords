@@ -578,20 +578,27 @@ body {
 }
 
 #board-container {
+  --tile-size: 46px;
+  --tile-font-size: 19px;
+  --board-gap: 6px;
+  --board-padding: 16px;
   position: relative; background: var(--white);
-  padding: 1rem;
+  padding: var(--board-padding);
   border-radius: var(--radius-xl); border: 1.5px solid var(--border-dark);
   box-shadow: var(--shadow-lg);
   user-select: none; touch-action: none;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
 }
 
-#letter-grid { display: grid; gap: 0.4rem; position: relative; z-index: 2; }
+#letter-grid { display: grid; gap: var(--board-gap); position: relative; z-index: 2; }
 
 .letter-tile {
-  width: 46px; height: 46px; background: var(--slate);
+  width: var(--tile-size); height: var(--tile-size); background: var(--slate);
   border: 1px solid rgba(27, 55, 64, 0.1); border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 1.2rem; font-weight: 800;
+  font-family: var(--font-display); font-size: var(--tile-font-size); font-weight: 800;
   color: var(--text-primary); cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
   box-shadow: 0 2px 0 rgba(27, 55, 64, 0.15); position: relative; top: 0;
@@ -978,9 +985,13 @@ body {
    RESPONSIVE
    ========================================== */
 @media (max-width: 480px) {
-  .letter-tile { width: 36px; height: 36px; font-size: 1.1rem; border-radius: 8px; }
-  #letter-grid { gap: 0.3rem; }
-  #board-container { padding: 0.75rem; }
+  #board-container {
+    --tile-size: 36px;
+    --tile-font-size: 18px;
+    --board-gap: 5px;
+    --board-padding: 12px;
+  }
+  .letter-tile { border-radius: 8px; }
   .board-panel-arcade { padding: 0.75rem; margin-top: -1rem; }
   .powerup-btn { padding: 0.5rem 0.3rem; min-width: 48px; }
   .pw-icon svg { width: 18px; height: 18px; }
