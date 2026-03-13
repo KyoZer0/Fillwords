@@ -124,7 +124,7 @@ class ConfettiSystem {
 // Auto-sizes grid, prevents path conflicts,
 // scoring-based placement with diagonal bias
 // ==========================================
-function generateBoard(cols, rows, words) {
+function generateBoard(cols, rows, words, layoutHint = {}) {
   const ALL_DIRS = [
     { dr: 0, dc: 1, key: 'right', axis: 'horizontal' },
     { dr: 0, dc: -1, key: 'left', axis: 'horizontal' },
@@ -136,11 +136,36 @@ function generateBoard(cols, rows, words) {
     { dr: -1, dc: -1, key: 'up-left', axis: 'diagonal' }
   ];
   const AXES = ['horizontal', 'vertical', 'diagonal'];
-
-  // Auto-expand grid so every word can fit in at least one direction
   const maxWordLen = Math.max(...words.map(w => w.length));
-  const effectiveCols = Math.max(cols, maxWordLen);
-  const effectiveRows = Math.max(rows, maxWordLen);
+
+  function getLayoutCandidates() {
+    const candidates = [];
+    const seen = new Set();
+    const preferredAxis = layoutHint.preferredAxis === 'vertical' ? 'vertical' : 'horizontal';
+
+    const addCandidate = (candidateCols, candidateRows) => {
+      const key = `${candidateCols}x${candidateRows}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      candidates.push({ cols: candidateCols, rows: candidateRows });
+    };
+
+    addCandidate(cols, rows);
+
+    if (maxWordLen > cols || maxWordLen > rows) {
+      if (preferredAxis === 'vertical') {
+        addCandidate(cols, Math.max(rows, maxWordLen));
+        addCandidate(Math.max(cols, maxWordLen), rows);
+      } else {
+        addCandidate(Math.max(cols, maxWordLen), rows);
+        addCandidate(cols, Math.max(rows, maxWordLen));
+      }
+
+      addCandidate(Math.max(cols, maxWordLen), Math.max(rows, maxWordLen));
+    }
+
+    return candidates;
+  }
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -173,7 +198,7 @@ function generateBoard(cols, rows, words) {
     return usedDirections.size >= minDirections;
   }
 
-  function canPlaceWord(grid, word, row, col, direction) {
+  function canPlaceWord(grid, word, row, col, direction, effectiveRows, effectiveCols) {
     const endR = row + direction.dr * (word.length - 1);
     const endC = col + direction.dc * (word.length - 1);
     if (endR < 0 || endR >= effectiveRows || endC < 0 || endC >= effectiveCols) return null;
@@ -224,7 +249,7 @@ function generateBoard(cols, rows, words) {
     return false;
   }
 
-  function buildFallbackBoard(requireCoverage = true) {
+  function buildFallbackBoard(effectiveRows, effectiveCols, requireCoverage = true) {
     const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const placedWords = [];
@@ -243,7 +268,7 @@ function generateBoard(cols, rows, words) {
       for (const direction of dirOrder) {
         for (let r = 0; r < effectiveRows && !placed; r++) {
           for (let c = 0; c < effectiveCols && !placed; c++) {
-            const candidate = canPlaceWord(grid, w, r, c, direction);
+            const candidate = canPlaceWord(grid, w, r, c, direction, effectiveRows, effectiveCols);
             if (!candidate) continue;
 
             const pathSet = new Set(candidate.positions.map(pos => cellKey(pos.r, pos.c)));
@@ -273,7 +298,7 @@ function generateBoard(cols, rows, words) {
     return { grid, placedWords };
   }
 
-  function tryGenerate() {
+  function tryGenerate(effectiveRows, effectiveCols) {
     const grid = Array(effectiveRows).fill(null).map(() => Array(effectiveCols).fill(''));
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const placedWords = [];
@@ -282,7 +307,7 @@ function generateBoard(cols, rows, words) {
 
     for (const word of sortedWords) {
       const w = word.toUpperCase();
-      const placement = findBestPlacement(grid, w, placedPaths, placementStats);
+      const placement = findBestPlacement(grid, w, placedPaths, placementStats, effectiveRows, effectiveCols);
       if (!placement) return null; // retry entire board
 
       // Apply placement to grid
@@ -300,7 +325,7 @@ function generateBoard(cols, rows, words) {
     return hasEnoughCoverage(placedWords) ? { grid, placedWords } : null;
   }
 
-  function findBestPlacement(grid, word, placedPaths, placementStats) {
+  function findBestPlacement(grid, word, placedPaths, placementStats, effectiveRows, effectiveCols) {
     const candidates = [];
 
     // Shuffled start positions for randomness
@@ -314,7 +339,7 @@ function generateBoard(cols, rows, words) {
 
     for (const [r, c] of starts) {
       for (const direction of dirs) {
-        const candidate = canPlaceWord(grid, word, r, c, direction);
+        const candidate = canPlaceWord(grid, word, r, c, direction, effectiveRows, effectiveCols);
         if (!candidate) continue;
 
         const newPathSet = new Set(candidate.positions.map(pos => cellKey(pos.r, pos.c)));
@@ -345,35 +370,41 @@ function generateBoard(cols, rows, words) {
     return candidates[Math.floor(Math.random() * topN)];
   }
 
-  // Retry until we get a board with mixed directions
-  let result = null;
-  for (let attempt = 0; attempt < 400; attempt++) {
-    result = tryGenerate();
-    if (result) break;
-  }
+  for (const candidate of getLayoutCandidates()) {
+    const effectiveCols = candidate.cols;
+    const effectiveRows = candidate.rows;
 
-  // Absolute fallback - still keep mixed directions
-  if (!result) {
-    result = buildFallbackBoard();
-  }
-  if (!result) {
-    result = buildFallbackBoard(false);
-  }
+    let result = null;
+    for (let attempt = 0; attempt < 400; attempt++) {
+      result = tryGenerate(effectiveRows, effectiveCols);
+      if (result) break;
+    }
 
-  // Fill blanks with random letters (full alphabet for variety)
-  const FILL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let r = 0; r < effectiveRows; r++) {
-    for (let c = 0; c < effectiveCols; c++) {
-      if (result.grid[r][c] === '') {
-        result.grid[r][c] = FILL[Math.floor(Math.random() * FILL.length)];
+    if (!result) {
+      result = buildFallbackBoard(effectiveRows, effectiveCols);
+    }
+    if (!result) {
+      result = buildFallbackBoard(effectiveRows, effectiveCols, false);
+    }
+    if (!result) {
+      continue;
+    }
+
+    const FILL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (let r = 0; r < effectiveRows; r++) {
+      for (let c = 0; c < effectiveCols; c++) {
+        if (result.grid[r][c] === '') {
+          result.grid[r][c] = FILL[Math.floor(Math.random() * FILL.length)];
+        }
       }
     }
+
+    result.cols = effectiveCols;
+    result.rows = effectiveRows;
+    return result;
   }
 
-  // Return actual dimensions used (may differ from requested)
-  result.cols = effectiveCols;
-  result.rows = effectiveRows;
-  return result;
+  throw new Error('Unable to generate board layout');
 }
 
 // ==========================================
@@ -471,6 +502,20 @@ class GameEngine {
     this.boardContainer.style.setProperty('--tile-font-size', `${Math.max(9, baseFontSize * safeScale)}px`);
     this.boardContainer.style.setProperty('--board-gap', `${baseGap * safeScale}px`);
     this.boardContainer.style.setProperty('--board-padding', `${basePadding * safeScale}px`);
+  }
+
+  getBoardLayoutHint(level) {
+    const panelWidth = this.boardPanel?.clientWidth || window.innerWidth;
+    const panelHeight = this.boardPanel?.clientHeight || window.innerHeight;
+    const aspectRatio = panelWidth / Math.max(panelHeight, 1);
+    const maxWordLen = Math.max(...level.words.map(word => word.length));
+    const preferredAxis = aspectRatio < 0.9 ? 'vertical' : 'horizontal';
+
+    return {
+      aspectRatio,
+      preferredAxis,
+      maxWordLen
+    };
   }
 
   refreshBoardLayout() {
@@ -922,7 +967,8 @@ class GameEngine {
     this.state.mistakeCount = 0;
     this.state.idleHintsUsed = 0;
     this.state.lastWinResult = null;
-    this.state.board = generateBoard(level.cols, level.rows, level.words);
+    this.switchScreen('game');
+    this.state.board = generateBoard(level.cols, level.rows, level.words, this.getBoardLayoutHint(level));
     
     // Use actual board dimensions (may be auto-expanded for long words)
     const actualCols = this.state.board.cols || level.cols;
@@ -959,7 +1005,6 @@ class GameEngine {
         this.wordListEl.appendChild(span);
     });
     
-    this.switchScreen('game');
     this.refreshBoardLayout();
     
     // GSAP Intro

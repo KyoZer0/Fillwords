@@ -378,6 +378,13 @@ h3 { font-size: 1.05rem; font-weight: 600; }
   .island-links, .island-cta { display: none !important; }
   .island-menu-btn { display: block !important; }
   .island-nav { padding: 0.5rem 0.75rem 0.5rem 1rem; }
+  .hero-content {
+    padding-top: 5.75rem;
+    padding-bottom: 1.5rem;
+  }
+  .hero-game-wrapper {
+    margin-top: 0.75rem !important;
+  }
 }
 
 /* ===== Hero (Full Viewport) ===== */
