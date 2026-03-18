@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Education · March 27, 2026 · 6 min read
+                        Education · March 10, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">Word Games in Education: Learning Through Play</h1>
                     <p>Moving beyond rote memorization: How gamification is reshaping the language arts curriculum.</p>

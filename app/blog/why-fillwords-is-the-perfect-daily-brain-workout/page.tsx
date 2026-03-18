@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · March 13, 2026 · 6 min read
+                        Science · March 16, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">Why Fillwords is the Perfect Daily Brain Workout</h1>
                     <p>Just like your body, your brain needs daily exercise to stay sharp.</p>

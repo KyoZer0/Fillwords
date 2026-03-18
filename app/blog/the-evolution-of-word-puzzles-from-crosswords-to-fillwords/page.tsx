@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        History · March 12, 2026 · 9 min read
+                        History · March 16, 2026 · 9 min read
                     </p>
                     <h1 className="gradient-text">The Evolution of Word Puzzles: From Crosswords to Fillwords</h1>
                     <p>A journey through time tracing our obsession with arranging letters into words.</p>

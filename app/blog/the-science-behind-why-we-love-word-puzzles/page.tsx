@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · March 16, 2026 · 10 min read
+                        Science · March 14, 2026 · 10 min read
                     </p>
                     <h1 className="gradient-text">The Science Behind Why We Love Word Puzzles</h1>
                     <p>Uncovering the evolutionary and neurological roots of our puzzle obsession.</p>

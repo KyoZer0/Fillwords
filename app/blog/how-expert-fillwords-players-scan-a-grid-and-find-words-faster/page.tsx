@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · March 31, 2026 · 12 min read
+                        Strategy · March 18, 2026 · 12 min read
                     </p>
                     <h1 className="gradient-text">How Expert Fillwords Players Scan a Grid and Find Words Faster</h1>
                     <p>The difference between random searching and deliberate scanning, broken down into trainable habits.</p>

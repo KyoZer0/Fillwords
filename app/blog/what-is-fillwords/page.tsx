@@ -14,7 +14,7 @@ export default function WhatIsFillwordsPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Game · February 10, 2026 · 5 min read
+                        Game · March 8, 2026 · 5 min read
                     </p>
                     <h1 className="gradient-text">What is FillWords? The Ultimate Word Puzzle Experience</h1>
                     <p>Discover the game that blends the best of word search with strategic puzzle mechanics.</p>

@@ -14,7 +14,7 @@ export default function BenefitsOfPuzzleGamesPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · February 8, 2026 · 6 min read
+                        Science · March 8, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">7 Brain Benefits of Playing Puzzle Games</h1>
                     <p>Science shows that puzzles improve memory, concentration, and problem-solving skills.</p>

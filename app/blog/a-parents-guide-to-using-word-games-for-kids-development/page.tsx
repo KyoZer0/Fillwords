@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Family · March 21, 2026 · 7 min read
+                        Family · March 12, 2026 · 7 min read
                     </p>
                     <h1 className="gradient-text">A Parent's Guide to Using Word Games for Kids' Development</h1>
                     <p>Turning screen time into a powerful educational tool for young readers.</p>

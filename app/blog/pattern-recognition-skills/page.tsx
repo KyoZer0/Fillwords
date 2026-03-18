@@ -14,7 +14,7 @@ export default function PatternRecognitionPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · February 18, 2026 · 9 min read
+                        Strategy · March 9, 2026 · 9 min read
                     </p>
                     <h1 className="gradient-text">Pattern Recognition: The Hidden Skill Behind Every Great Puzzler</h1>
                     <p>How expert puzzlers develop visual pattern-matching skills and why this ability transfers to real life.</p>

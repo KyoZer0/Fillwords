@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · March 20, 2026 · 11 min read
+                        Science · March 13, 2026 · 11 min read
                     </p>
                     <h1 className="gradient-text">Can Word Games Delay Cognitive Decline? What the Research Says</h1>
                     <p>Separating the hype from the hard science regarding puzzles and dementia prevention.</p>

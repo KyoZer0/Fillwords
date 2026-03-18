@@ -14,7 +14,7 @@ export default function NeurosciencePost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · February 24, 2026 · 10 min read
+                        Science · March 9, 2026 · 10 min read
                     </p>
                     <h1 className="gradient-text">The Neuroscience of Puzzle Solving: What Happens in Your Brain</h1>
                     <p>Dopamine, neural plasticity, and the brain regions activated when you solve puzzles.</p>

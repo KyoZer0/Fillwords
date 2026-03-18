@@ -14,7 +14,7 @@ export default function MindfulnessPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · February 12, 2026 · 9 min read
+                        Strategy · March 8, 2026 · 9 min read
                     </p>
                     <h1 className="gradient-text">Mindfulness and Puzzles: How Games Create Flow States</h1>
                     <p>The deep connection between puzzles, mindfulness, and active meditation through games.</p>

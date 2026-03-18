@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Lifestyle · March 30, 2026 · 12 min read
+                        Lifestyle · March 18, 2026 · 12 min read
                     </p>
                     <h1 className="gradient-text">How to Build a Daily Fillwords Habit That Actually Sticks</h1>
                     <p>A practical system for making word puzzles part of your day without turning them into another chore.</p>

@@ -14,7 +14,7 @@ export default function HistoryOfPuzzleGamesPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        History · February 2, 2026 · 8 min read
+                        History · March 7, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">The Fascinating History of Word Puzzles</h1>
                     <p>From 18th-century dissected maps to modern digital word searches, puzzle games share a richer history than you might expect.</p>

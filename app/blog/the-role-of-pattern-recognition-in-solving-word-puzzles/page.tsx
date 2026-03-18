@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · March 19, 2026 · 8 min read
+                        Strategy · March 13, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">The Role of Pattern Recognition in Solving Word Puzzles</h1>
                     <p>How your brain decodes chaos into order, one letter at a time.</p>

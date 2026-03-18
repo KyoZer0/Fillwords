@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Opinion · March 17, 2026 · 8 min read
+                        Opinion · March 14, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">Fillwords vs. Traditional Crosswords: Which is Better for Your Brain?</h1>
                     <p>A deep dive into the differing cognitive workouts provided by two puzzle heavyweights.</p>

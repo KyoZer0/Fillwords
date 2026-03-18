@@ -14,7 +14,7 @@ export default function TipsAndTricksPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · February 5, 2026 · 7 min read
+                        Strategy · March 7, 2026 · 7 min read
                     </p>
                     <h1 className="gradient-text">Pro Tips &amp; Tricks to Master FillWords</h1>
                     <p>Expert tips backed by cognitive science to solve puzzles faster and more efficiently.</p>

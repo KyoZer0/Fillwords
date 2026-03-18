@@ -14,7 +14,7 @@ export default function BestPuzzlesForKidsPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Family · January 28, 2026 · 6 min read
+                        Family · March 7, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">Best Puzzle Games for Kids in 2026</h1>
                     <p>Educational and fun puzzle games curated for children, evaluated against safety and learning criteria.</p>

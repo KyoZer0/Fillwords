@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Opinion · March 29, 2026 · 6 min read
+                        Opinion · March 10, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">Why Fillwords is the New Wordle: The Rise of Swipe Puzzles</h1>
                     <p>The logic-puzzle evolution of the internet's favorite obsession.</p>

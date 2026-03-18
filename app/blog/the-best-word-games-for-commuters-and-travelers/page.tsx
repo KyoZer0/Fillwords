@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Lifestyle · March 22, 2026 · 6 min read
+                        Lifestyle · March 12, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">The Best Word Games for Commuters and Travelers</h1>
                     <p>Why logic puzzles are the ultimate antidote to the drudgery of the daily commute.</p>

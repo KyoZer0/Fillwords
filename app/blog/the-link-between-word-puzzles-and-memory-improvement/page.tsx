@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · March 28, 2026 · 8 min read
+                        Science · March 10, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">The Link Between Word Puzzles and Memory Improvement</h1>
                     <p>A closer look at how logic games act as a gymnasium for your working memory.</p>

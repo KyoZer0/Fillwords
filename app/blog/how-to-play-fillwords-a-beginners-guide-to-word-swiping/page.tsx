@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Game Guide · March 23, 2026 · 5 min read
+                        Game Guide · March 12, 2026 · 5 min read
                     </p>
                     <h1 className="gradient-text">How to Play Fillwords: A Beginner's Guide to Word Swiping</h1>
                     <p>Everything you need to know to transition from puzzle rookie to solving your first grid.</p>

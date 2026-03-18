@@ -14,7 +14,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Strategy · March 10, 2026 · 8 min read
+                        Strategy · March 17, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">The Ultimate Strategy Guide to Mastering Fillwords</h1>
                     <p>Elevate your word-swiping game with advanced strategies and cognitive techniques.</p>

@@ -14,7 +14,7 @@ export default function PuzzlesAndFocusPost() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · February 21, 2026 · 9 min read
+                        Science · March 9, 2026 · 9 min read
                     </p>
                     <h1 className="gradient-text">How Puzzles Improve Focus and Attention in the Digital Age</h1>
                     <p>Combat digital distraction and train sustained attention through puzzle solving.</p>

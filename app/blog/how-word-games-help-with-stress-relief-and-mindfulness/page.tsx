@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Mental Health · March 18, 2026 · 6 min read
+                        Mental Health · March 13, 2026 · 6 min read
                     </p>
                     <h1 className="gradient-text">How Word Games Help with Stress Relief and Mindfulness</h1>
                     <p>Discover how swiping letters can be a simple, effective form of active meditation.</p>

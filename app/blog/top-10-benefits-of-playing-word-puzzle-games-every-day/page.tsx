@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Science · March 14, 2026 · 8 min read
+                        Science · March 15, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">Top 10 Benefits of Playing Word Puzzle Games Every Day</h1>
                     <p>More than just a pastime—discover how daily play fundamentally changes your brain.</p>

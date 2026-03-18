@@ -15,7 +15,7 @@ export default function Post() {
             <div className="page-header">
                 <div className="container">
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-                        Psychology · March 25, 2026 · 8 min read
+                        Psychology · March 11, 2026 · 8 min read
                     </p>
                     <h1 className="gradient-text">Understanding the Psychology of Puzzle Game Addiction</h1>
                     <p>Why we find it nearly impossible to stop playing after "just one more grid."</p>
